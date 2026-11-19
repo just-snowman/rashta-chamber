@@ -47,7 +47,6 @@
       z-index: 1;
     }
 
-    /* 상단 HUD */
     .hud-top {
       position: fixed;
       top: max(12px, env(safe-area-inset-top));
@@ -108,7 +107,6 @@
       font-weight: 700;
     }
 
-    /* 하단 조작 힌트 */
     .guide-toast {
       position: fixed;
       bottom: max(18px, env(safe-area-inset-bottom));
@@ -129,7 +127,6 @@
       transition: opacity 0.35s ease;
     }
 
-    /* 인트로 오버레이 */
     #intro-overlay {
       position: fixed;
       inset: 0;
@@ -206,7 +203,6 @@
       filter: brightness(1.06);
     }
 
-    /* 편지 모달/시트 */
     .scrim {
       position: fixed;
       inset: 0;
@@ -349,7 +345,7 @@
     <div class="hud-right">
       <button class="hud-pill garden-btn" id="zone-toggle" type="button">🌿 궁전 정원 산책</button>
       <button class="hud-pill" id="view-toggle" type="button">🏛️ 전체 조망 뷰</button>
-      <button class="hud-pill active" id="audio-toggle" type="button">♪ 음악 ON</button>
+      <button class="hud-pill active" id="audio-toggle" type="button">♪ 소리 ON</button>
     </div>
   </div>
 
@@ -360,8 +356,8 @@
       <div class="intro-kicker">THE REMARRIED EMPRESS · ROSE CHAMBER &amp; GARDEN</div>
       <h1 class="intro-title">장미방 &amp; 슐라이스하임 궁전 정원</h1>
       <p class="intro-desc">
-        화사한 로즈 벽지와 장미 아치가 빛나는 장미방 실내와, 긴 중앙 수로와 대칭 화단이 펼쳐진 슐라이스하임 궁전 정원을 자유롭게 걸어 보세요.<br>
-        반짝이는 편지를 읽고, 상단 버튼으로 실내와 정원을 오가며 산책해 보세요.
+        화사한 로즈 벽지와 장미 아치가 빛나는 장미방 실내와, 긴 중앙 수로와 대칭 화단이 펼쳐진 슐라이스하임 궁전 정원을 걸어 보세요.<br>
+        내 아바타의 걸음과 바닥마다 달라지는 발소리를 들으며 반짝이는 편지를 모아 보세요.
       </p>
       <button class="enter-btn" id="enter-btn" type="button">공간으로 들어가기</button>
     </div>
@@ -395,7 +391,7 @@
     import * as THREE from 'three';
 
     // =========================================================
-    // 1. 렌더러 & 공용 카메라 상태
+    // 1. 렌더러 & 공용 상태
     // =========================================================
     const wrap = document.getElementById('canvas-wrap');
     const scene = new THREE.Scene();
@@ -411,25 +407,26 @@
     renderer.toneMappingExposure = 1.18;
     wrap.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 140);
+    const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 180);
     const EYE_HEIGHT = 1.62;
 
     let currentZone = 'chamber'; // 'chamber' | 'garden'
     let isOverview = false;
 
     const player = {
-      pos: new THREE.Vector3(0, EYE_HEIGHT, 6.2),
+      pos: new THREE.Vector3(0, EYE_HEIGHT, 5.2),
       yaw: 0,
-      pitch: 0.02,
+      pitch: 0.04,
       targetPos: null,
-      moveSpeed: 4.5,
-      surface: 'carpet'
+      moveSpeed: 4.6,
+      surface: 'carpet',
+      walkPhase: 0
     };
 
     const overviewState = {
-      pos: new THREE.Vector3(0, 12.4, 14.2),
+      pos: new THREE.Vector3(0, 12.6, 14.4),
       lookAt: new THREE.Vector3(0, 1.0, -0.5),
-      targetPos: new THREE.Vector3(0, 12.4, 14.2),
+      targetPos: new THREE.Vector3(0, 12.6, 14.4),
       targetLookAt: new THREE.Vector3(0, 1.0, -0.5)
     };
 
@@ -678,4 +675,1179 @@
       const c = document.createElement('canvas');
       c.width = 256;
       c.height = 256;
-      const ctx = c.getContext('2d
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ead9be';
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 650; i++) {
+        const x = (i * 73) % 256;
+        const y = (i * 137) % 256;
+        const r = 1.2 + (i % 3) * 0.8;
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(165, 142, 112, 0.35)' : 'rgba(255, 250, 240, 0.45)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(16, 36);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const roseWallTex = makeRoseWallpaperTexture();
+    const parquetTex = makeParquetTexture();
+    const roundRugTex = makeRoundRugTexture();
+    const stainedGlassTex = makeStainedGlassTexture();
+    const gravelTex = makeGravelTexture();
+
+    const mats = {
+      wallpaper: new THREE.MeshStandardMaterial({ map: roseWallTex, roughness: 0.8, metalness: 0.02 }),
+      sageMolding: new THREE.MeshStandardMaterial({ color: 0xb4d1c5, roughness: 0.62, metalness: 0.05 }),
+      blushTrim: new THREE.MeshStandardMaterial({ color: 0xf9d2d8, roughness: 0.64, metalness: 0.05 }),
+      ivoryWood: new THREE.MeshStandardMaterial({ color: 0xfff8f2, roughness: 0.48, metalness: 0.06 }),
+      goldLeaf: new THREE.MeshStandardMaterial({ color: 0xe6bf78, roughness: 0.3, metalness: 0.72 }),
+      parquet: new THREE.MeshStandardMaterial({ map: parquetTex, roughness: 0.52, metalness: 0.05 }),
+      roundRug: new THREE.MeshStandardMaterial({ map: roundRugTex, roughness: 0.9, metalness: 0.0 }),
+      burgundyVelvet: new THREE.MeshStandardMaterial({ color: 0xa63f54, roughness: 0.84, metalness: 0.04 }),
+      roseVelvet: new THREE.MeshStandardMaterial({ color: 0xd98b9c, roughness: 0.82, metalness: 0.05 }),
+      blueVelvet: new THREE.MeshStandardMaterial({ color: 0x8bb0d6, roughness: 0.8, metalness: 0.05 }),
+      lavenderVelvet: new THREE.MeshStandardMaterial({ color: 0xb199c9, roughness: 0.82, metalness: 0.04 }),
+      beigeDrapery: new THREE.MeshStandardMaterial({ color: 0xe3c5b4, roughness: 0.78, metalness: 0.05 }),
+      sheerCurtain: new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.55,
+        transparent: true,
+        opacity: 0.62,
+        side: THREE.DoubleSide
+      }),
+      foliageGreen: new THREE.MeshStandardMaterial({ color: 0x6f9974, roughness: 0.78 }),
+      rosePetal: new THREE.MeshStandardMaterial({ color: 0xf49bb0, roughness: 0.64 }),
+      softRosePetal: new THREE.MeshStandardMaterial({ color: 0xffd1db, roughness: 0.64 }),
+      stainedGlass: new THREE.MeshStandardMaterial({
+        map: stainedGlassTex,
+        emissive: new THREE.Color(0xfff0cc),
+        emissiveIntensity: 0.34,
+        roughness: 0.22
+      }),
+      crystal: new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: new THREE.Color(0xffe7b8),
+        emissiveIntensity: 0.55,
+        roughness: 0.14,
+        metalness: 0.2
+      }),
+      marble: new THREE.MeshStandardMaterial({ color: 0xfff5f0, roughness: 0.32, metalness: 0.08 }),
+      hearthDark: new THREE.MeshStandardMaterial({ color: 0x3b2c32, roughness: 0.68 }),
+      mirror: new THREE.MeshStandardMaterial({ color: 0xe6f2f8, roughness: 0.12, metalness: 0.85 }),
+      // 정원 재질
+      gravelPath: new THREE.MeshStandardMaterial({ map: gravelTex, roughness: 0.92 }),
+      gardenLawn: new THREE.MeshStandardMaterial({ color: 0x88b97a, roughness: 0.88 }),
+      parterreLawn: new THREE.MeshStandardMaterial({ color: 0x76ab69, roughness: 0.86 }),
+      canalWater: new THREE.MeshStandardMaterial({
+        color: 0x8cc7db,
+        roughness: 0.16,
+        metalness: 0.25,
+        transparent: true,
+        opacity: 0.86
+      }),
+      bridgeWood: new THREE.MeshStandardMaterial({ color: 0xc2986c, roughness: 0.68 }),
+      treeTrunk: new THREE.MeshStandardMaterial({ color: 0x8b6952, roughness: 0.88 }),
+      treeCanopy: new THREE.MeshStandardMaterial({ color: 0x689c62, roughness: 0.82 }),
+      palaceStone: new THREE.MeshStandardMaterial({ color: 0xf7efe4, roughness: 0.62 }),
+      palaceRoof: new THREE.MeshStandardMaterial({ color: 0x8d9ea8, roughness: 0.55 })
+    };
+
+    // =========================================================
+    // 3. 조명 구성
+    // =========================================================
+    const hemiLight = new THREE.HemisphereLight(0xfff7f4, 0xdfb6ae, 1.35);
+    hemiLight.position.set(0, 12, 0);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.55);
+    sunLight.position.set(10, 18, 12);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(1024, 1024);
+    sunLight.shadow.camera.near = 1;
+    sunLight.shadow.camera.far = 65;
+    const dCam = 24;
+    sunLight.shadow.camera.left = -dCam;
+    sunLight.shadow.camera.right = dCam;
+    sunLight.shadow.camera.top = dCam;
+    sunLight.shadow.camera.bottom = -dCam;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    // =========================================================
+    // 4. 플레이어 아바타 (항상 보이도록 유지 + 걸을 때 팔·다리·망토 모션)
+    // =========================================================
+    const avatarGroup = new THREE.Group();
+    scene.add(avatarGroup);
+
+    const avatarParts = {
+      body: null,
+      skirt: null,
+      head: null,
+      leftArm: null,
+      rightArm: null,
+      leftLeg: null,
+      rightLeg: null
+    };
+
+    function buildAvatar() {
+      const dressMat = new THREE.MeshStandardMaterial({ color: 0xf4a4b8, roughness: 0.65 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0xfff8f4, roughness: 0.45 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe2d6, roughness: 0.6 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x6e424c, roughness: 0.7 });
+
+      // 발목/다리
+      const legGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.68, 10);
+      avatarParts.leftLeg = new THREE.Mesh(legGeo, trimMat);
+      avatarParts.leftLeg.position.set(-0.11, 0.34, 0);
+      avatarParts.leftLeg.castShadow = true;
+
+      avatarParts.rightLeg = new THREE.Mesh(legGeo, trimMat);
+      avatarParts.rightLeg.position.set(0.11, 0.34, 0);
+      avatarParts.rightLeg.castShadow = true;
+
+      // 플레어 스커트
+      avatarParts.skirt = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.66, 20), dressMat);
+      avatarParts.skirt.position.set(0, 0.84, 0);
+      avatarParts.skirt.castShadow = true;
+
+      // 상의
+      avatarParts.body = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.21, 0.46, 14), dressMat);
+      avatarParts.body.position.set(0, 1.28, 0);
+      avatarParts.body.castShadow = true;
+
+      // 팔
+      const armGeo = new THREE.CylinderGeometry(0.048, 0.042, 0.44, 10);
+      avatarParts.leftArm = new THREE.Mesh(armGeo, skinMat);
+      avatarParts.leftArm.position.set(-0.24, 1.26, 0);
+      avatarParts.leftArm.castShadow = true;
+
+      avatarParts.rightArm = new THREE.Mesh(armGeo, skinMat);
+      avatarParts.rightArm.position.set(0.24, 1.26, 0);
+      avatarParts.rightArm.castShadow = true;
+
+      // 머리 & 헤어
+      avatarParts.head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), skinMat);
+      avatarParts.head.position.set(0, 1.66, 0);
+      avatarParts.head.castShadow = true;
+
+      const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.182, 16, 16), hairMat);
+      hairCap.position.set(0, 1.69, -0.02);
+      hairCap.scale.set(1.02, 1.04, 1.08);
+      avatarParts.head.add(hairCap);
+
+      // 발밑 부드러운 링 그림자
+      const shadowRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.24, 0.42, 24),
+        new THREE.MeshBasicMaterial({ color: 0x3b1e29, side: THREE.DoubleSide, transparent: true, opacity: 0.25 })
+      );
+      shadowRing.rotation.x = -Math.PI / 2;
+      shadowRing.position.y = 0.02;
+
+      avatarGroup.add(
+        avatarParts.leftLeg,
+        avatarParts.rightLeg,
+        avatarParts.skirt,
+        avatarParts.body,
+        avatarParts.leftArm,
+        avatarParts.rightArm,
+        avatarParts.head,
+        shadowRing
+      );
+    }
+
+    buildAvatar();
+
+    // =========================================================
+    // 5. 장미방 실내 (ROOM_W = 18, ROOM_D = 22)
+    // =========================================================
+    const chamberGroup = new THREE.Group();
+    scene.add(chamberGroup);
+
+    const ROOM_W = 18;
+    const ROOM_D = 22;
+    const WALL_H = 6.8;
+    const HALF_W = ROOM_W / 2;
+    const HALF_D = ROOM_D / 2;
+
+    const chamberFloorMeshes = [];
+    const chamberObstacles = [];
+    const chandeliers = [];
+
+    const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), mats.parquet);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    floorMesh.userData.surface = 'wood';
+    chamberGroup.add(floorMesh);
+    chamberFloorMeshes.push(floorMesh);
+
+    const rugMesh = new THREE.Mesh(new THREE.CircleGeometry(6.4, 72), mats.roundRug);
+    rugMesh.rotation.x = -Math.PI / 2;
+    rugMesh.position.set(0, 0.014, 0.2);
+    rugMesh.receiveShadow = true;
+    rugMesh.userData.surface = 'carpet';
+    chamberGroup.add(rugMesh);
+    chamberFloorMeshes.push(rugMesh);
+
+    const ceilingMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(ROOM_W, ROOM_D),
+      new THREE.MeshStandardMaterial({ color: 0xfff3ee, roughness: 0.82 })
+    );
+    ceilingMesh.rotation.x = Math.PI / 2;
+    ceilingMesh.position.y = WALL_H;
+    chamberGroup.add(ceilingMesh);
+
+    function buildWallWithPanels(width, height, pos, rotY, panelCount) {
+      const wg = new THREE.Group();
+      wg.position.copy(pos);
+      wg.rotation.y = rotY;
+
+      const wall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), mats.wallpaper);
+      wall.receiveShadow = true;
+      wg.add(wall);
+
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(width, 0.45, 0.14), mats.sageMolding);
+      plinth.position.set(0, -height / 2 + 0.225, 0.07);
+      wg.add(plinth);
+
+      const chairRail = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, 0.14), mats.blushTrim);
+      chairRail.position.set(0, -height / 2 + 1.15, 0.07);
+      wg.add(chairRail);
+
+      const crown = new THREE.Mesh(new THREE.BoxGeometry(width, 0.34, 0.26), mats.ivoryWood);
+      crown.position.set(0, height / 2 - 0.17, 0.12);
+      wg.add(crown);
+
+      const span = width / panelCount;
+      for (let i = 0; i <= panelCount; i++) {
+        const px = -width / 2 + i * span;
+        const pilaster = new THREE.Mesh(new THREE.BoxGeometry(0.28, height - 0.5, 0.14), mats.sageMolding);
+        pilaster.position.set(px, 0, 0.07);
+        wg.add(pilaster);
+      }
+
+      chamberGroup.add(wg);
+    }
+
+    buildWallWithPanels(ROOM_W, WALL_H, new THREE.Vector3(0, WALL_H / 2, -HALF_D), 0, 4);
+    buildWallWithPanels(ROOM_W, WALL_H, new THREE.Vector3(0, WALL_H / 2, HALF_D), Math.PI, 4);
+    buildWallWithPanels(ROOM_D, WALL_H, new THREE.Vector3(-HALF_W, WALL_H / 2, 0), Math.PI / 2, 5);
+    buildWallWithPanels(ROOM_D, WALL_H, new THREE.Vector3(HALF_W, WALL_H / 2, 0), -Math.PI / 2, 5);
+
+    function buildStainedGlassWindow(x, y, z, rotY, w, h) {
+      const sg = new THREE.Group();
+      sg.position.set(x, y, z);
+      sg.rotation.y = rotY;
+
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mats.stainedGlass);
+      glass.position.z = 0.06;
+      sg.add(glass);
+
+      const topBar = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.22, 0.18), mats.sageMolding);
+      topBar.position.set(0, h / 2 + 0.08, 0.09);
+      const botBar = topBar.clone();
+      botBar.position.set(0, -h / 2 - 0.08, 0.09);
+      const leftBar = new THREE.Mesh(new THREE.BoxGeometry(0.22, h, 0.18), mats.sageMolding);
+      leftBar.position.set(-w / 2 - 0.08, 0, 0.09);
+      const rightBar = leftBar.clone();
+      rightBar.position.set(w / 2 + 0.08, 0, 0.09);
+
+      sg.add(topBar, botBar, leftBar, rightBar);
+      chamberGroup.add(sg);
+    }
+
+    buildStainedGlassWindow(-6.4, 3.6, -HALF_D + 0.04, 0, 2.2, 4.4);
+    buildStainedGlassWindow(6.4, 3.6, -HALF_D + 0.04, 0, 2.2, 4.4);
+    buildStainedGlassWindow(-3.3, 5.45, -HALF_D + 0.04, 0, 3.6, 1.1);
+    buildStainedGlassWindow(3.3, 5.45, -HALF_D + 0.04, 0, 3.6, 1.1);
+
+    const vineGroup = new THREE.Group();
+    vineGroup.position.set(0, 0, -HALF_D + 0.55);
+    const vinePts = [];
+    for (let i = 0; i <= 36; i++) {
+      const t = (i / 36) * Math.PI;
+      vinePts.push(new THREE.Vector3(-Math.cos(t) * 5.2, 1.1 + Math.sin(t) * 4.25, 0));
+    }
+    const vineCurve = new THREE.CatmullRomCurve3(vinePts);
+    vineGroup.add(new THREE.Mesh(new THREE.TubeGeometry(vineCurve, 44, 0.08, 8, false), mats.foliageGreen));
+
+    for (let i = 0; i <= 38; i++) {
+      const p = vineCurve.getPoint(i / 38);
+      const leaf = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), mats.foliageGreen);
+      leaf.scale.set(1.3, 0.45, 0.9);
+      leaf.position.set(
+        p.x + Math.sin(i * 2.1) * 0.24,
+        p.y + Math.cos(i * 1.7) * 0.22,
+        p.z + Math.sin(i * 1.3) * 0.16
+      );
+      leaf.rotation.set(i * 0.5, i * 0.8, i * 0.3);
+      vineGroup.add(leaf);
+
+      if (i % 3 === 1) {
+        const rose = new THREE.Mesh(
+          new THREE.SphereGeometry(0.14, 10, 10),
+          i % 6 === 1 ? mats.rosePetal : mats.softRosePetal
+        );
+        rose.position.set(leaf.position.x, leaf.position.y + 0.05, leaf.position.z + 0.12);
+        vineGroup.add(rose);
+      }
+    }
+    chamberGroup.add(vineGroup);
+
+    [-4.8, 0, 4.8].forEach((wx, idx) => {
+      const cg = new THREE.Group();
+      cg.position.set(wx, 0, HALF_D - 0.18);
+      cg.rotation.y = Math.PI;
+
+      const sheer = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.2), mats.sheerCurtain);
+      sheer.position.set(0, 2.75, 0.05);
+      cg.add(sheer);
+
+      [-1.15, 1.15].forEach((sideX) => {
+        const drape = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 5.2, 14, 1, true), mats.beigeDrapery);
+        drape.scale.set(1.1, 1, 0.45);
+        drape.position.set(sideX, 2.75, 0.16);
+        drape.castShadow = true;
+        cg.add(drape);
+      });
+
+      const pelmet = new THREE.Mesh(new THREE.BoxGeometry(2.95, 0.55, 0.34), mats.beigeDrapery);
+      pelmet.position.set(0, 5.15, 0.18);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 12), mats.goldLeaf);
+      rod.rotation.z = Math.PI / 2;
+      rod.position.set(0, 5.45, 0.22);
+      cg.add(pelmet, rod);
+
+      if (idx === 1) {
+        const miniTable = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.42, 0.65, 20), mats.ivoryWood);
+        miniTable.position.set(0, 0.325, 1.35);
+        const miniTop = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.06, 20), mats.marble);
+        miniTop.position.set(0, 0.66, 1.35);
+        cg.add(miniTable, miniTop);
+      }
+
+      chamberGroup.add(cg);
+    });
+
+    [-5.2, 0, 5.2].forEach((cx, idx) => {
+      const ch = new THREE.Group();
+      ch.position.set(cx, WALL_H - 1.15, idx === 1 ? -1.2 : 1.6);
+
+      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.15, 8), mats.goldLeaf);
+      chain.position.y = 0.575;
+      ch.add(chain);
+
+      const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.045, 10, 28), mats.goldLeaf);
+      crownRing.rotation.x = Math.PI / 2;
+      ch.add(crownRing);
+
+      const lowerRing = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.035, 10, 24), mats.goldLeaf);
+      lowerRing.rotation.x = Math.PI / 2;
+      lowerRing.position.y = -0.35;
+      ch.add(lowerRing);
+
+      for (let k = 0; k < 14; k++) {
+        const a = (k / 14) * Math.PI * 2;
+        const drop = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), mats.crystal);
+        drop.scale.set(0.8, 1.6, 0.8);
+        drop.position.set(Math.cos(a) * 0.75, -0.18, Math.sin(a) * 0.75);
+        ch.add(drop);
+      }
+
+      const coreGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), mats.crystal);
+      coreGlow.position.y = -0.12;
+      ch.add(coreGlow);
+
+      chamberGroup.add(ch);
+      chandeliers.push(ch);
+    });
+
+    // 침대
+    const bedGroup = new THREE.Group();
+    bedGroup.position.set(0, 0, -7.4);
+    const dais = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.18, 4.2), mats.ivoryWood);
+    dais.position.y = 0.09;
+    dais.receiveShadow = true;
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.42, 3.1), mats.roseVelvet);
+    mattress.position.set(0, 0.52, 0.1);
+    mattress.castShadow = true;
+    const duvet = new THREE.Mesh(new THREE.BoxGeometry(2.54, 0.2, 2.1), mats.burgundyVelvet);
+    duvet.position.set(0, 0.76, 0.45);
+    duvet.castShadow = true;
+    const headboard = new THREE.Mesh(new THREE.BoxGeometry(2.75, 1.55, 0.22), mats.ivoryWood);
+    headboard.position.set(0, 1.15, -1.42);
+    const backCurtain = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.6), mats.burgundyVelvet);
+    backCurtain.position.set(0, 2.1, -1.65);
+    const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(3.55, 0.35, 3.55), mats.ivoryWood);
+    canopyTop.position.set(0, 3.85, 0.05);
+    const canopyValance = new THREE.Mesh(new THREE.BoxGeometry(3.45, 0.36, 0.2), mats.roseVelvet);
+    canopyValance.position.set(0, 3.55, 1.72);
+    const footBench = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.52, 0.68), mats.ivoryWood);
+    footBench.position.set(0, 0.42, 2.25);
+    bedGroup.add(dais, mattress, duvet, headboard, backCurtain, canopyTop, canopyValance, footBench);
+
+    [[-1.62, 1.62], [1.62, 1.62]].forEach(([px, pz]) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 3.7, 12), mats.ivoryWood);
+      post.position.set(px, 1.95, pz);
+      const sheerDrape = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 3.45, 12, 1, true), mats.sheerCurtain);
+      sheerDrape.position.set(px * 0.85, 1.82, pz - 0.1);
+      bedGroup.add(post, sheerDrape);
+    });
+    chamberGroup.add(bedGroup);
+    chamberObstacles.push({ x: 0, z: -7.4, r: 2.4 });
+
+    // 화장대
+    const vanityGroup = new THREE.Group();
+    vanityGroup.position.set(-7.3, 0, -2.4);
+    vanityGroup.rotation.y = Math.PI / 2;
+    const vanityDesk = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.82, 0.85), mats.ivoryWood);
+    vanityDesk.position.set(0, 0.41, 0);
+    vanityDesk.castShadow = true;
+    const mirrorMain = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.15, 0.08), mats.goldLeaf);
+    mirrorMain.position.set(0, 1.42, -0.22);
+    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.98), mats.mirror);
+    mirrorGlass.position.set(0, 1.42, -0.17);
+    const stool = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.48, 0.52), mats.blueVelvet);
+    stool.position.set(0, 0.24, 0.68);
+    vanityGroup.add(vanityDesk, mirrorMain, mirrorGlass, stool);
+    chamberGroup.add(vanityGroup);
+    chamberObstacles.push({ x: -7.3, z: -2.4, r: 1.5 });
+
+    // 셰즈롱 & 벽난로
+    const chaiseGroup = new THREE.Group();
+    chaiseGroup.position.set(6.8, 0, -2.8);
+    chaiseGroup.rotation.y = -Math.PI / 2.2;
+    const chaiseBody = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.44, 1.85), mats.blueVelvet);
+    chaiseBody.position.set(0, 0.28, 0);
+    chaiseBody.castShadow = true;
+    const chaiseBack = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.72, 0.22), mats.ivoryWood);
+    chaiseBack.position.set(0, 0.66, -0.82);
+    chaiseGroup.add(chaiseBody, chaiseBack);
+    chamberGroup.add(chaiseGroup);
+    chamberObstacles.push({ x: 6.8, z: -2.8, r: 1.25 });
+
+    const fireplaceGroup = new THREE.Group();
+    fireplaceGroup.position.set(HALF_W - 0.45, 0, 2.6);
+    fireplaceGroup.rotation.y = -Math.PI / 2;
+    [-1.05, 1.05].forEach((px) => {
+      const jamb = new THREE.Mesh(new THREE.BoxGeometry(0.38, 1.35, 0.55), mats.marble);
+      jamb.position.set(px, 0.675, 0);
+      fireplaceGroup.add(jamb);
+    });
+    const mantel = new THREE.Mesh(new THREE.BoxGeometry(2.75, 0.26, 0.68), mats.marble);
+    mantel.position.set(0, 1.48, 0.05);
+    const hearthBox = new THREE.Mesh(new THREE.BoxGeometry(1.75, 1.25, 0.32), mats.hearthDark);
+    hearthBox.position.set(0, 0.625, -0.05);
+    const roseCluster = new THREE.Mesh(new THREE.DodecahedronGeometry(0.34, 1), mats.rosePetal);
+    roseCluster.position.set(0, 1.82, 0.05);
+    fireplaceGroup.add(mantel, hearthBox, roseCluster);
+    chamberGroup.add(fireplaceGroup);
+    chamberObstacles.push({ x: HALF_W - 0.8, z: 2.6, r: 1.3 });
+
+    // 티테이블
+    function buildTeaTable(x, z, radius, clothMat) {
+      const tg = new THREE.Group();
+      tg.position.set(x, 0, z);
+      const cloth = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.14, 0.74, 24), clothMat);
+      cloth.position.y = 0.38;
+      cloth.castShadow = true;
+      const laceTop = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.85, radius * 0.85, 0.03, 24), mats.ivoryWood);
+      laceTop.position.y = 0.76;
+      const blooms = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2, 1), mats.lavenderVelvet);
+      blooms.position.y = 0.96;
+      tg.add(cloth, laceTop, blooms);
+      chamberGroup.add(tg);
+      chamberObstacles.push({ x, z, r: radius + 0.35 });
+    }
+    buildTeaTable(2.3, 2.2, 0.72, mats.blueVelvet);
+    buildTeaTable(3.6, 4.1, 0.66, mats.roseVelvet);
+
+    // =========================================================
+    // 6. 슐라이스하임 궁전 정원 (Schleißheim Baroque Garden)
+    // =========================================================
+    const gardenGroup = new THREE.Group();
+    gardenGroup.visible = false;
+    scene.add(gardenGroup);
+
+    const GARDEN_W = 54;
+    const GARDEN_D = 76;
+    const gardenFloorMeshes = [];
+    const gardenObstacles = [];
+
+    // 잔디 대지
+    const lawnBase = new THREE.Mesh(new THREE.PlaneGeometry(GARDEN_W, GARDEN_D), mats.gardenLawn);
+    lawnBase.rotation.x = -Math.PI / 2;
+    lawnBase.receiveShadow = true;
+    lawnBase.userData.surface = 'grass';
+    gardenGroup.add(lawnBase);
+    gardenFloorMeshes.push(lawnBase);
+
+    // 중앙 직선 수로 축 (z: -24 ~ +22, 폭 5.2m)
+    const canalWater = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 46), mats.canalWater);
+    canalWater.rotation.x = -Math.PI / 2;
+    canalWater.position.set(0, 0.015, -1);
+    canalWater.userData.surface = 'wood';
+    gardenGroup.add(canalWater);
+    gardenFloorMeshes.push(canalWater);
+
+    // 수로 양옆 자갈 산책로
+    [-4.3, 4.3].forEach((px) => {
+      const path = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 54), mats.gravelPath);
+      path.rotation.x = -Math.PI / 2;
+      path.position.set(px, 0.012, 2);
+      path.receiveShadow = true;
+      path.userData.surface = 'gravel';
+      gardenGroup.add(path);
+      gardenFloorMeshes.push(path);
+    });
+
+    // 가로 산책로 & 목재 다리
+    const crossPath = new THREE.Mesh(new THREE.PlaneGeometry(36, 3.2), mats.gravelPath);
+    crossPath.rotation.x = -Math.PI / 2;
+    crossPath.position.set(0, 0.012, -2);
+    crossPath.receiveShadow = true;
+    crossPath.userData.surface = 'gravel';
+    gardenGroup.add(crossPath);
+    gardenFloorMeshes.push(crossPath);
+
+    const footBridge = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.18, 3.4), mats.bridgeWood);
+    footBridge.position.set(0, 0.09, -2);
+    footBridge.castShadow = true;
+    footBridge.receiveShadow = true;
+    footBridge.userData.surface = 'wood';
+    gardenGroup.add(footBridge);
+    gardenFloorMeshes.push(footBridge);
+
+    // 북쪽 궁전 파사드 (슐라이스하임 궁전 진입 정면 모티브)
+    const palaceBlock = new THREE.Mesh(new THREE.BoxGeometry(28, 7.5, 6), mats.palaceStone);
+    palaceBlock.position.set(0, 3.75, -31);
+    palaceBlock.castShadow = true;
+    palaceBlock.receiveShadow = true;
+    gardenGroup.add(palaceBlock);
+
+    const palaceRoof = new THREE.Mesh(new THREE.ConeGeometry(19.8, 3.2, 4), mats.palaceRoof);
+    palaceRoof.position.set(0, 9.1, -31);
+    palaceRoof.rotation.y = Math.PI / 4;
+    gardenGroup.add(palaceRoof);
+    gardenObstacles.push({ x: 0, z: -31, r: 8.5 });
+
+    // 대칭형 파르테르 화단 & 보스케 나무 구획
+    function addGardenTree(x, z, scale = 1) {
+      const tg = new THREE.Group();
+      tg.position.set(x, 0, z);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * scale, 0.24 * scale, 1.8 * scale, 8), mats.treeTrunk);
+      trunk.position.y = 0.9 * scale;
+      trunk.castShadow = true;
+
+      const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(1.15 * scale, 1), mats.treeCanopy);
+      crown.position.y = 2.35 * scale;
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+
+      tg.add(trunk, crown);
+      gardenGroup.add(tg);
+      gardenObstacles.push({ x, z, r: 1.0 * scale });
+    }
+
+    [-1, 1].forEach((side) => {
+      // 파르테르 꽃 화단 구획
+      [-12, 8].forEach((pz) => {
+        const bed = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.14, 11), mats.parterreLawn);
+        bed.position.set(side * 10.5, 0.07, pz);
+        bed.receiveShadow = true;
+        gardenGroup.add(bed);
+
+        const flowerBorder = new THREE.Mesh(new THREE.BoxGeometry(7.3, 0.22, 9.8), mats.rosePetal);
+        flowerBorder.position.set(side * 10.5, 0.11, pz);
+        gardenGroup.add(flowerBorder);
+      });
+
+      // 가로수 열식
+      for (let tz = -20; tz <= 18; tz += 6.3) {
+        addGardenTree(side * 6.4, tz, 0.95);
+        addGardenTree(side * 16.5, tz, 1.15);
+      }
+    });
+
+    // 중앙 분수
+    const fountainBase = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.3, 0.65, 24), mats.marble);
+    fountainBase.position.set(0, 0.325, 10.5);
+    fountainBase.castShadow = true;
+    const fountainSpire = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.8, 16), mats.ivoryWood);
+    fountainSpire.position.set(0, 1.45, 10.5);
+    gardenGroup.add(fountainBase, fountainSpire);
+    gardenObstacles.push({ x: 0, z: 10.5, r: 2.3 });
+
+    // =========================================================
+    // 7. 편지 단서 데이터 (장미방 4개 + 정원 4개 = 총 8개)
+    // =========================================================
+    const CLUES = [
+      {
+        zone: 'chamber',
+        title: '장미 덩굴 아치 아래 남겨진 편지',
+        greeting: '장미 화환이 드리운 자리에서 · 비밀 쪽지',
+        quote: '“장미 꽃잎이 떨어지듯, 이 방의 모든 시선이 나를 향하고 있어요.”',
+        body: '초록 덩굴과 분홍 장미가 아치형으로 감싸고 스테인드글라스 채광이 스며드는 장미방의 가장 화사한 자리에서 발견한 편지입니다.',
+        pos: new THREE.Vector3(0, 1.55, -5.2),
+        walkPos: new THREE.Vector3(0, EYE_HEIGHT, -3.4)
+      },
+      {
+        zone: 'chamber',
+        title: '3단 거울 화장대 서랍의 편지',
+        greeting: '화장대 보석함 옆 · 향기 나는 편지',
+        quote: '“가장 화사한 장미가 어울리는 날, 거울 속 나도 특별해 보여야 해요.”',
+        body: '세 개의 거울과 치장 소품이 놓인 서쪽 화장대 위, 장미 향수가 살짝 배어 있는 분홍빛 편지입니다.',
+        pos: new THREE.Vector3(-6.4, 1.4, -2.4),
+        walkPos: new THREE.Vector3(-4.5, EYE_HEIGHT, -2.4)
+      },
+      {
+        zone: 'chamber',
+        title: '대리석 벽난로 장미 화병 옆 편지',
+        greeting: '벽난로 선반 위 · 따뜻한 편지',
+        quote: '“꽃다발이 시들지 않도록, 따뜻한 온기만 남겨둘게요.”',
+        body: '크림빛 대리석 벽난로 선반 위 장미 화병 곁에 기대어 놓인 다정한 편지입니다.',
+        pos: new THREE.Vector3(6.6, 1.75, 2.6),
+        walkPos: new THREE.Vector3(4.5, EYE_HEIGHT, 2.6)
+      },
+      {
+        zone: 'chamber',
+        title: '플로럴 티테이블 찻잔 옆 편지',
+        greeting: '다과 테이블 위 · 초대 편지',
+        quote: '“달콤한 다과와 향긋한 차 한 잔이면, 오늘 하루도 완벽해요.”',
+        body: '원형 러그 위 티테이블 곁에서 차를 마시며 나누려던 이야기가 적힌 편지입니다.',
+        pos: new THREE.Vector3(2.3, 1.35, 2.2),
+        walkPos: new THREE.Vector3(0.7, EYE_HEIGHT, 2.2)
+      },
+      {
+        zone: 'garden',
+        title: '슐라이스하임 중앙 수로 다리 위의 편지',
+        greeting: '수로를 건너는 다리 난간 · 산책 쪽지',
+        quote: '“잔잔한 수로 위로 햇살이 부서질 때, 정원의 산책이 가장 빛나요.”',
+        body: '슐라이스하임 정원의 긴 중앙 수로를 가로지르는 다리 위에서 바람에 날리지 않게 눌러 둔 편지입니다.',
+        pos: new THREE.Vector3(0, 1.45, -2),
+        walkPos: new THREE.Vector3(0, EYE_HEIGHT, 0.8)
+      },
+      {
+        zone: 'garden',
+        title: '대칭 파르테르 꽃 화단 곁의 편지',
+        greeting: '정형 화단 산책로 · 계절의 편지',
+        quote: '“반듯하게 이어진 꽃 화단 길을 따라 걷다 보면 마음도 차분해져요.”',
+        body: '바로크 양식의 대칭형 화단 옆 자갈 산책로에서 발견한 산책자의 편지입니다.',
+        pos: new THREE.Vector3(-4.3, 1.35, -10),
+        walkPos: new THREE.Vector3(-4.3, EYE_HEIGHT, -7.5)
+      },
+      {
+        zone: 'garden',
+        title: '남쪽 분수대 앞 산책로의 편지',
+        greeting: '정원 분수 곁 · 오후의 편지',
+        quote: '“물소리와 나무 그늘이 어우러진 이 길은 언제 걸어도 참 좋아요.”',
+        body: '정원 남쪽 분수 앞 자갈길에서 들려오는 물소리와 함께 읽게 되는 편지입니다.',
+        pos: new THREE.Vector3(4.3, 1.35, 10.5),
+        walkPos: new THREE.Vector3(4.3, EYE_HEIGHT, 8.0)
+      },
+      {
+        zone: 'garden',
+        title: '가로수길 끝에서 마주한 편지',
+        greeting: '보스케 가로수길 · 마지막 편지',
+        quote: '“높고 곧은 나무 그늘 아래서, 정원의 끝까지 발걸음을 이어가요.”',
+        body: '슐라이스하임 정원의 가로수 열식 사이를 거닐며 만날 수 있는 여덟 번째 편지입니다.',
+        pos: new THREE.Vector3(-4.3, 1.35, 15),
+        walkPos: new THREE.Vector3(-4.3, EYE_HEIGHT, 12.5)
+      }
+    ];
+
+    document.getElementById('clue-total').textContent = String(CLUES.length);
+
+    const discovered = new Set();
+    const clueMarkers = [];
+    const markerMatDefault = new THREE.MeshStandardMaterial({
+      color: 0xffe0e8,
+      emissive: 0xf07894,
+      emissiveIntensity: 0.85,
+      roughness: 0.18,
+      metalness: 0.5
+    });
+    const markerMatFound = new THREE.MeshStandardMaterial({
+      color: 0xfff0ba,
+      emissive: 0xe0ad52,
+      emissiveIntensity: 0.5,
+      roughness: 0.24,
+      metalness: 0.65
+    });
+
+    CLUES.forEach((clue, idx) => {
+      const mg = new THREE.Group();
+      mg.position.copy(clue.pos);
+      mg.visible = clue.zone === currentZone;
+
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.26, 0), markerMatDefault.clone());
+      gem.scale.set(0.85, 1.35, 0.85);
+      gem.userData = { clueIndex: idx };
+      mg.add(gem);
+
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.34, 0.4, 24),
+        new THREE.MeshBasicMaterial({ color: 0xfff0f4, side: THREE.DoubleSide, transparent: true, opacity: 0.78 })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = -0.32;
+      mg.add(ring);
+
+      scene.add(mg);
+      clueMarkers.push({ group: mg, gem, ring, index: idx, zone: clue.zone });
+    });
+
+    // =========================================================
+    // 8. Web Audio (배경 선율 + 바닥 재질별 발자국 소리)
+    // =========================================================
+    const audioCtxHolder = { ctx: null, enabled: true, timerId: null, step: 0 };
+
+    function ensureAudio() {
+      if (!audioCtxHolder.ctx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtxHolder.ctx = new Ctx();
+      }
+      if (audioCtxHolder.ctx && audioCtxHolder.ctx.state === 'suspended') {
+        audioCtxHolder.ctx.resume().catch(() => {});
+      }
+      return audioCtxHolder.ctx;
+    }
+
+    const ARP_NOTES = [
+      523.25, 659.25, 783.99, 987.77,
+      493.88, 659.25, 783.99, 987.77,
+      440.00, 659.25, 783.99, 880.00,
+      392.00, 587.33, 783.99, 987.77
+    ];
+
+    function playArpNote(freq) {
+      if (!audioCtxHolder.enabled) return;
+      const ctx = ensureAudio();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.032, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.4);
+    }
+
+    function startMusicLoop() {
+      if (audioCtxHolder.timerId) return;
+      audioCtxHolder.timerId = setInterval(() => {
+        if (!audioCtxHolder.enabled) return;
+        const note = ARP_NOTES[audioCtxHolder.step % ARP_NOTES.length];
+        playArpNote(note);
+        audioCtxHolder.step += 1;
+      }, 430);
+    }
+
+    function playFootstep(surface) {
+      if (!audioCtxHolder.enabled) return;
+      const ctx = ensureAudio();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      if (surface === 'carpet') {
+        // 러그/카펫 위 부드러운 발소리
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(125, now);
+        osc.frequency.exponentialRampToValueAtTime(55, now + 0.095);
+        gain.gain.setValueAtTime(0.085, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.105);
+      } else if (surface === 'gravel') {
+        // 정원 자갈길 사각거리는 발소리
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(340, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.065);
+        gain.gain.setValueAtTime(0.055, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+      } else if (surface === 'grass') {
+        // 정원 잔디 위 포근한 발소리
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(68, now + 0.085);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+      } else {
+        // 원목 마루 / 목재 다리 발소리
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(84, now + 0.08);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      }
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    }
+
+    // =========================================================
+    // 9. 구역 전환 (장미방 ↔ 슐라이스하임 궁전 정원) & UI
+    // =========================================================
+    const clueCountEl = document.getElementById('clue-count');
+    const zoneToggleBtn = document.getElementById('zone-toggle');
+    const viewToggleBtn = document.getElementById('view-toggle');
+    const audioToggleBtn = document.getElementById('audio-toggle');
+    const guideToast = document.getElementById('guide-toast');
+    const introOverlay = document.getElementById('intro-overlay');
+    const enterBtn = document.getElementById('enter-btn');
+    const scrim = document.getElementById('scrim');
+    const detailSheet = document.getElementById('detail-sheet');
+    const detailTag = document.getElementById('detail-tag');
+    const detailTitle = document.getElementById('detail-title');
+    const detailGreeting = document.getElementById('detail-greeting');
+    const detailQuote = document.getElementById('detail-quote');
+    const detailBody = document.getElementById('detail-body');
+    const walkHereBtn = document.getElementById('walk-here-btn');
+    const closeSheetBtn = document.getElementById('close-sheet-btn');
+
+    let activeClue = null;
+
+    function switchZone(nextZone) {
+      currentZone = nextZone;
+      player.targetPos = null;
+
+      const isGarden = currentZone === 'garden';
+      chamberGroup.visible = !isGarden;
+      gardenGroup.visible = isGarden;
+
+      scene.background = new THREE.Color(isGarden ? 0xe6f2f7 : 0xf8e7e8);
+      scene.fog = new THREE.FogExp2(isGarden ? 0xe6f2f7 : 0xf8e7e8, isGarden ? 0.0065 : 0.011);
+
+      clueMarkers.forEach((m) => {
+        m.group.visible = m.zone === currentZone;
+      });
+
+      if (isGarden) {
+        zoneToggleBtn.textContent = '🌹 장미방 돌아가기';
+        player.pos.set(4.3, EYE_HEIGHT, 6.5);
+        player.yaw = 0;
+        overviewState.targetPos.set(0, 17.5, 22.5);
+        overviewState.targetLookAt.set(0, 0.5, -2.0);
+      } else {
+        zoneToggleBtn.textContent = '🌿 궁전 정원 산책';
+        player.pos.set(0, EYE_HEIGHT, 5.2);
+        player.yaw = 0;
+        overviewState.targetPos.set(0, 12.6, 14.4);
+        overviewState.targetLookAt.set(0, 1.0, -0.5);
+      }
+
+      avatarGroup.visible = true;
+      avatarGroup.position.set(player.pos.x, 0, player.pos.z);
+      avatarGroup.rotation.y = player.yaw;
+    }
+
+    zoneToggleBtn.addEventListener('click', () => {
+      ensureAudio();
+      switchZone(currentZone === 'chamber' ? 'garden' : 'chamber');
+    });
+
+    function openClueSheet(clue, index) {
+      activeClue = clue;
+      detailTag.textContent = clue.zone === 'garden' ? 'SCHLEISSHEIM GARDEN LETTER' : 'ROSE CHAMBER LETTER';
+      detailTitle.textContent = clue.title;
+      detailGreeting.textContent = clue.greeting;
+      detailQuote.textContent = clue.quote;
+      detailBody.textContent = clue.body;
+
+      if (!discovered.has(index)) {
+        discovered.add(index);
+        clueCountEl.textContent = String(discovered.size);
+        const m = clueMarkers[index];
+        if (m) m.gem.material = markerMatFound;
+      }
+
+      scrim.classList.add('open');
+      detailSheet.classList.add('open');
+    }
+
+    function closeClueSheet() {
+      scrim.classList.remove('open');
+      detailSheet.classList.remove('open');
+      activeClue = null;
+    }
+
+    closeSheetBtn.addEventListener('click', closeClueSheet);
+    scrim.addEventListener('click', closeClueSheet);
+
+    walkHereBtn.addEventListener('click', () => {
+      if (!activeClue) return;
+      const dest = activeClue.walkPos.clone();
+      closeClueSheet();
+      if (isOverview) {
+        toggleViewMode(false);
+      }
+      player.targetPos = dest;
+    });
+
+    function toggleViewMode(forceOverview) {
+      isOverview = typeof forceOverview === 'boolean' ? forceOverview : !isOverview;
+      if (isOverview) {
+        viewToggleBtn.textContent = '👁️ 눈높이 시점';
+        viewToggleBtn.classList.add('active');
+        guideToast.textContent = '전체 조망 뷰 · 바닥을 탭하면 그 자리로 먼저 이동합니다';
+      } else {
+        viewToggleBtn.textContent = '🏛️ 전체 조망 뷰';
+        viewToggleBtn.classList.remove('active');
+        guideToast.textContent = '바닥 탭으로 이동 · 드래그로 시선 회전';
+      }
+    }
+
+    viewToggleBtn.addEventListener('click', () => toggleViewMode());
+
+    audioToggleBtn.addEventListener('click', () => {
+      audioCtxHolder.enabled = !audioCtxHolder.enabled;
+      if (audioCtxHolder.enabled) {
+        ensureAudio();
+        startMusicLoop();
+        audioToggleBtn.textContent = '♪ 소리 ON';
+        audioToggleBtn.classList.add('active');
+      } else {
+        audioToggleBtn.textContent = '♪ 소리 OFF';
+        audioToggleBtn.classList.remove('active');
+      }
+    });
+
+    enterBtn.addEventListener('click', () => {
+      introOverlay.classList.add('hidden');
+      ensureAudio();
+      startMusicLoop();
+    });
+
+    function clampPosition(v) {
+      const obs = currentZone === 'chamber' ? chamberObstacles : gardenObstacles;
+      const boundX = currentZone === 'chamber' ? HALF_W - 1.1 : GARDEN_W / 2 - 2.0;
+      const minZ = currentZone === 'chamber' ? -HALF_D + 1.1 : -24.0;
+      const maxZ = currentZone === 'chamber' ? HALF_D - 1.1 : 22.0;
+
+      v.x = Math.max(-boundX, Math.min(boundX, v.x));
+      v.z = Math.max(minZ, Math.min(maxZ, v.z));
+
+      for (const ob of obs) {
+        const dx = v.x - ob.x;
+        const dz = v.z - ob.z;
+        const dist = Math.hypot(dx, dz);
+        const minDist = ob.r + 0.55;
+        if (dist < minDist && dist > 0.0001) {
+          v.x = ob.x + (dx / dist) * minDist;
+          v.z = ob.z + (dz / dist) * minDist;
+        }
+      }
+      v.y = EYE_HEIGHT;
+      return v;
+    }
+
+    function detectSurfaceAt(x, z) {
+      if (currentZone === 'chamber') {
+        return Math.hypot(x, z - 0.2) <= 6.4 ? 'carpet' : 'wood';
+      }
+      if (Math.abs(x) <= 2.7 && Math.abs(z - (-2)) <= 1.8) return 'wood';
+      if (Math.abs(Math.abs(x) - 4.3) <= 1.7) return 'gravel';
+      if (Math.abs(z - (-2)) <= 1.7) return 'gravel';
+      return 'grass';
+    }
+
+    // =========================================================
+    // 10. 포인터 조작 & 애니메이션 루프
+    // =========================================================
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+
+    let pointerDownPos = { x: 0, y: 0 };
+    let isDragging = false;
+    let lastDragPos = { x: 0, y: 0 };
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      if (detailSheet.classList.contains('open')) return;
+      ensureAudio();
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+      lastDragPos = { x: e.clientX, y: e.clientY };
+      isDragging = true;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging || detailSheet.classList.contains('open')) return;
+      const dx = e.clientX - lastDragPos.x;
+      const dy = e.clientY - lastDragPos.y;
+      lastDragPos = { x: e.clientX, y: e.clientY };
+
+      if (!isOverview) {
+        player.yaw -= dx * 0.0052;
+        player.pitch = Math.max(-0.52, Math.min(0.52, player.pitch - dy * 0.0042));
+      } else {
+        overviewState.targetPos.x = Math.max(-14, Math.min(14, overviewState.targetPos.x - dx * 0.02));
+        overviewState.targetPos.z = Math.max(4, Math.min(28, overviewState.targetPos.z - dy * 0.02));
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (detailSheet.classList.contains('open')) return;
+
+      const movedDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      if (movedDist > 9) return;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointerNdc, camera);
+
+      const visibleGems = clueMarkers.filter((m) => m.group.visible).map((m) => m.gem);
+      const gemHits = raycaster.intersectObjects(visibleGems, false);
+      if (gemHits.length > 0) {
+        const idx = gemHits[0].object.userData.clueIndex;
+        if (typeof idx === 'number' && CLUES[idx]) {
+          openClueSheet(CLUES[idx], idx);
+          return;
+        }
+      }
+
+      const floorTargets = currentZone === 'chamber' ? chamberFloorMeshes : gardenFloorMeshes;
+      const floorHits = raycaster.intersectObjects(floorTargets, false);
+      if (floorHits.length > 0) {
+        const dest = clampPosition(floorHits[0].point.clone());
+        player.targetPos = dest;
+        if (isOverview) {
+          guideToast.textContent = '선택한 위치로 이동 중 · 눈높이 보기는 상단 [👁️ 눈높이 시점] 버튼';
+        }
+      }
+    });
+
+    const clock = new THREE.Clock();
+    let stepAccum = 0;
+
+    function updatePlayerAndAvatar(dt, elapsed) {
+      let moving = false;
+
+      if (player.targetPos) {
+        const toTarget = new THREE.Vector3().subVectors(player.targetPos, player.pos);
+        toTarget.y = 0;
+        const dist = toTarget.length();
+        if (dist < 0.12) {
+          player.targetPos = null;
+        } else {
+          moving = true;
+          toTarget.normalize();
+          const stepLen = Math.min(dist, player.moveSpeed * dt);
+          player.pos.addScaledVector(toTarget, stepLen);
+          clampPosition(player.pos);
+
+          const desiredYaw = Math.atan2(-toTarget.x, -toTarget.z);
+          let diff = desiredYaw - player.yaw;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          player.yaw += diff * Math.min(1, dt * 8);
+
+          player.surface = detectSurfaceAt(player.pos.x, player.pos.z);
+          stepAccum += stepLen;
+          if (stepAccum >= 1.0) {
+            stepAccum = 0;
+            playFootstep(player.surface);
+          }
+        }
+      }
+
+      // 아바타 위치·방향·걸음 모션 (항상 visible 유지)
+      avatarGroup.visible = true;
+      avatarGroup.position.set(player.pos.x, 0, player.pos.z);
+      avatarGroup.rotation.y = player.yaw;
+
+      if (moving) {
+        player.walkPhase += dt * 11;
+        const swing = Math.sin(player.walkPhase) * 0.48;
+        avatarParts.leftLeg.rotation.x = swing;
+        avatarParts.rightLeg.rotation.x = -swing;
+        avatarParts.leftArm.rotation.x = -swing * 0.7;
+        avatarParts.rightArm.rotation.x = swing * 0.7;
+        avatarParts.body.position.y = 1.28 + Math.abs(Math.cos(player.walkPhase)) * 0.03;
+      } else {
+        avatarParts.leftLeg.rotation.x *= 0.8;
+        avatarParts.rightLeg.rotation.x *= 0.8;
+        avatarParts.leftArm.rotation.x *= 0.8;
+        avatarParts.rightArm.rotation.x *= 0.8;
+        avatarParts.body.position.y = 1.28 + Math.sin(elapsed * 2.0) * 0.01;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.getElapsedTime();
+
+      updatePlayerAndAvatar(dt, elapsed);
+
+      clueMarkers.forEach((m) => {
+        if (!m.group.visible) return;
+        m.gem.rotation.y = elapsed * 1.6 + m.index;
+        m.gem.position.y = Math.sin(elapsed * 2.4 + m.index) * 0.08;
+        m.ring.position.y = -0.32 + Math.sin(elapsed * 2.4 + m.index) * 0.06;
+      });
+
+      if (currentZone === 'chamber') {
+        chandeliers.forEach((ch, i) => {
+          ch.rotation.z = Math.sin(elapsed * 0.9 + i) * 0.015;
+        });
+      }
+
+      if (isOverview) {
+        overviewState.pos.lerp(overviewState.targetPos, Math.min(1, dt * 6));
+        overviewState.lookAt.lerp(overviewState.targetLookAt, Math.min(1, dt * 6));
+        camera.position.copy(overviewState.pos);
+        camera.lookAt(overviewState.lookAt);
+      } else {
+        // 아바타 뒤쪽 살짝 위에서 바라보는 3인칭 산책 시점 (아바타가 화면에서 항상 보이도록)
+        const backDist = 3.1;
+        const forwardX = -Math.sin(player.yaw);
+        const forwardZ = -Math.cos(player.yaw);
+        const desiredCamPos = new THREE.Vector3(
+          player.pos.x - forwardX * backDist,
+          player.pos.y + 0.85 + Math.sin(player.pitch) * 1.4,
+          player.pos.z - forwardZ * backDist
+        );
+        camera.position.lerp(desiredCamPos, Math.min(1, dt * 10));
+
+        const lookTarget = new THREE.Vector3(
+          player.pos.x + forwardX * 4.5,
+          player.pos.y + 0.25 - Math.sin(player.pitch) * 2.2,
+          player.pos.z + forwardZ * 4.5
+        );
+        camera.lookAt(lookTarget);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
