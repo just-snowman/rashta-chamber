@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>라스타의 황실 침실 · 장미방 (Rose Chamber)</title>
+  <title>라스타의 장미방 & 슐라이스하임 궁전 정원</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -17,8 +17,8 @@
       --letter-paper: #fffaf5;
       --letter-border: #e5c3c9;
       --letter-ink: #3a212a;
-      --glass-bg: rgba(46, 22, 32, 0.68);
-      --glass-border: rgba(248, 212, 218, 0.34);
+      --glass-bg: rgba(46, 22, 32, 0.72);
+      --glass-border: rgba(248, 212, 218, 0.36);
     }
 
     * {
@@ -50,14 +50,15 @@
     /* 상단 HUD */
     .hud-top {
       position: fixed;
-      top: max(14px, env(safe-area-inset-top));
-      left: 14px;
-      right: 14px;
+      top: max(12px, env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
       z-index: 20;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       pointer-events: none;
     }
 
@@ -65,8 +66,8 @@
       pointer-events: auto;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 8px 13px;
+      gap: 6px;
+      padding: 7px 12px;
       border-radius: 999px;
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
@@ -74,8 +75,8 @@
       border: 1px solid var(--glass-border);
       color: var(--rose-cream);
       font-family: 'Noto Serif KR', serif;
-      font-size: 12.5px;
-      letter-spacing: 0.02em;
+      font-size: 12px;
+      letter-spacing: 0.01em;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
       cursor: pointer;
       transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
@@ -90,10 +91,15 @@
       border-color: rgba(255, 224, 230, 0.65);
     }
 
+    .hud-pill.garden-btn {
+      background: linear-gradient(135deg, rgba(96, 145, 112, 0.92), rgba(56, 102, 74, 0.92));
+      border-color: rgba(214, 245, 224, 0.55);
+    }
+
     .hud-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       pointer-events: auto;
     }
 
@@ -111,7 +117,7 @@
       z-index: 20;
       padding: 8px 16px;
       border-radius: 999px;
-      background: rgba(42, 20, 30, 0.68);
+      background: rgba(42, 20, 30, 0.72);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(248, 212, 218, 0.28);
@@ -132,7 +138,7 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: radial-gradient(circle at 50% 35%, rgba(116, 52, 72, 0.72), rgba(28, 14, 21, 0.92));
+      background: radial-gradient(circle at 50% 35%, rgba(116, 52, 72, 0.75), rgba(28, 14, 21, 0.93));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       transition: opacity 0.45s ease, visibility 0.45s ease;
@@ -149,7 +155,7 @@
       max-width: 420px;
       padding: 28px 24px 26px;
       border-radius: 24px;
-      background: linear-gradient(165deg, rgba(66, 33, 47, 0.94), rgba(33, 17, 25, 0.96));
+      background: linear-gradient(165deg, rgba(66, 33, 47, 0.95), rgba(33, 17, 25, 0.97));
       border: 1px solid rgba(247, 209, 216, 0.38);
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
       text-align: center;
@@ -165,7 +171,7 @@
     }
 
     .intro-title {
-      font-size: 26px;
+      font-size: 25px;
       font-weight: 700;
       color: #fff9fa;
       margin-bottom: 12px;
@@ -335,39 +341,40 @@
 
   <div class="hud-top">
     <div class="hud-pill" id="clue-pill">
-      <span>💌 장미방 편지</span>
+      <span>💌 편지</span>
       <span class="clue-count" id="clue-count">0</span>
-      <span>/ 8</span>
+      <span>/ <span id="clue-total">8</span></span>
     </div>
 
     <div class="hud-right">
+      <button class="hud-pill garden-btn" id="zone-toggle" type="button">🌿 궁전 정원 산책</button>
       <button class="hud-pill" id="view-toggle" type="button">🏛️ 전체 조망 뷰</button>
       <button class="hud-pill active" id="audio-toggle" type="button">♪ 음악 ON</button>
     </div>
   </div>
 
-  <div class="guide-toast" id="guide-toast">바닥·가구 탭으로 이동 · 드래그로 시선 회전</div>
+  <div class="guide-toast" id="guide-toast">바닥 탭으로 이동 · 드래그로 시선 회전</div>
 
   <div id="intro-overlay">
     <div class="intro-card">
-      <div class="intro-kicker">THE REMARRIED EMPRESS · ROSE CHAMBER</div>
-      <h1 class="intro-title">라스타의 황실 침실 · 장미방</h1>
+      <div class="intro-kicker">THE REMARRIED EMPRESS · ROSE CHAMBER &amp; GARDEN</div>
+      <h1 class="intro-title">장미방 &amp; 슐라이스하임 궁전 정원</h1>
       <p class="intro-desc">
-        화사한 로즈 벽지와 장미 덩굴 아치, 스테인드글라스와 세 개의 샹들리에가 빛나는 장미방.<br>
-        반짝이는 단서를 눌러 숨겨진 편지를 읽고, 걸음을 옮기며 바닥마다 다른 발소리를 들어 보세요.
+        화사한 로즈 벽지와 장미 아치가 빛나는 장미방 실내와, 긴 중앙 수로와 대칭 화단이 펼쳐진 슐라이스하임 궁전 정원을 자유롭게 걸어 보세요.<br>
+        반짝이는 편지를 읽고, 상단 버튼으로 실내와 정원을 오가며 산책해 보세요.
       </p>
-      <button class="enter-btn" id="enter-btn" type="button">장미방 안으로 들어가기</button>
+      <button class="enter-btn" id="enter-btn" type="button">공간으로 들어가기</button>
     </div>
   </div>
 
   <div class="scrim" id="scrim"></div>
   <section class="letter-sheet" id="detail-sheet" aria-live="polite">
     <div class="letter-header">
-      <span class="letter-tag">ROSE CHAMBER LETTER</span>
+      <span class="letter-tag" id="detail-tag">ROSE CHAMBER LETTER</span>
       <span class="letter-seal">🌹</span>
     </div>
     <h2 class="letter-title" id="detail-title">편지 제목</h2>
-    <div class="letter-greeting" id="detail-greeting">장미방에서 남긴 쪽지</div>
+    <div class="letter-greeting" id="detail-greeting">남겨진 쪽지</div>
     <blockquote class="letter-quote" id="detail-quote">편지 구절</blockquote>
     <p class="letter-body" id="detail-body">편지 내용</p>
     <div class="letter-actions">
@@ -388,7 +395,7 @@
     import * as THREE from 'three';
 
     // =========================================================
-    // 1. 캔버스 & 렌더러 설정 (화사한 톤맵 & 모바일 세로형 최적화)
+    // 1. 렌더러 & 공용 카메라 상태
     // =========================================================
     const wrap = document.getElementById('canvas-wrap');
     const scene = new THREE.Scene();
@@ -404,25 +411,21 @@
     renderer.toneMappingExposure = 1.18;
     wrap.appendChild(renderer.domElement);
 
-    const ROOM_W = 18;
-    const ROOM_D = 22;
-    const WALL_H = 6.8;
-    const HALF_W = ROOM_W / 2;
-    const HALF_D = ROOM_D / 2;
-
-    const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 90);
+    const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 140);
     const EYE_HEIGHT = 1.62;
+
+    let currentZone = 'chamber'; // 'chamber' | 'garden'
+    let isOverview = false;
 
     const player = {
       pos: new THREE.Vector3(0, EYE_HEIGHT, 6.2),
       yaw: 0,
       pitch: 0.02,
       targetPos: null,
-      moveSpeed: 4.3,
+      moveSpeed: 4.5,
       surface: 'carpet'
     };
 
-    let isOverview = false;
     const overviewState = {
       pos: new THREE.Vector3(0, 12.4, 14.2),
       lookAt: new THREE.Vector3(0, 1.0, -0.5),
@@ -431,7 +434,7 @@
     };
 
     // =========================================================
-    // 2. 프로시저럴 텍스처 생성기 (더 화사해진 로즈 벽지, 파케 마루, 원형 러그, 스테인드글라스)
+    // 2. 프로시저럴 텍스처 생성기
     // =========================================================
     function makeRoseWallpaperTexture() {
       const c = document.createElement('canvas');
@@ -487,11 +490,7 @@
         ctx.restore();
       }
 
-      const centers = [
-        [128, 128], [384, 128],
-        [128, 384], [384, 384],
-        [256, 256]
-      ];
+      const centers = [[128, 128], [384, 128], [128, 384], [384, 384], [256, 256]];
       centers.forEach(([bx, by], idx) => {
         const tone = idx % 2 === 0 ? ['#f09eb0', '#ffd0da'] : ['#e48b9f', '#ffc6d3'];
         drawRose(bx, by, 17, tone[0], tone[1]);
@@ -513,7 +512,6 @@
       c.width = 512;
       c.height = 512;
       const ctx = c.getContext('2d');
-
       ctx.fillStyle = '#d6b08a';
       ctx.fillRect(0, 0, 512, 512);
 
@@ -676,951 +674,8 @@
       return tex;
     }
 
-    const roseWallTex = makeRoseWallpaperTexture();
-    const parquetTex = makeParquetTexture();
-    const roundRugTex = makeRoundRugTexture();
-    const stainedGlassTex = makeStainedGlassTexture();
-
-    // 더 화사하고 사랑스러운 컬러 팔레트
-    const mats = {
-      wallpaper: new THREE.MeshStandardMaterial({ map: roseWallTex, roughness: 0.8, metalness: 0.02 }),
-      sageMolding: new THREE.MeshStandardMaterial({ color: 0xb4d1c5, roughness: 0.62, metalness: 0.05 }),
-      blushTrim: new THREE.MeshStandardMaterial({ color: 0xf9d2d8, roughness: 0.64, metalness: 0.05 }),
-      ivoryWood: new THREE.MeshStandardMaterial({ color: 0xfff8f2, roughness: 0.48, metalness: 0.06 }),
-      goldLeaf: new THREE.MeshStandardMaterial({ color: 0xe6bf78, roughness: 0.3, metalness: 0.72 }),
-      parquet: new THREE.MeshStandardMaterial({ map: parquetTex, roughness: 0.52, metalness: 0.05 }),
-      roundRug: new THREE.MeshStandardMaterial({ map: roundRugTex, roughness: 0.9, metalness: 0.0 }),
-      burgundyVelvet: new THREE.MeshStandardMaterial({ color: 0xa63f54, roughness: 0.84, metalness: 0.04 }),
-      roseVelvet: new THREE.MeshStandardMaterial({ color: 0xd98b9c, roughness: 0.82, metalness: 0.05 }),
-      blueVelvet: new THREE.MeshStandardMaterial({ color: 0x8bb0d6, roughness: 0.8, metalness: 0.05 }),
-      lavenderVelvet: new THREE.MeshStandardMaterial({ color: 0xb199c9, roughness: 0.82, metalness: 0.04 }),
-      beigeDrapery: new THREE.MeshStandardMaterial({ color: 0xe3c5b4, roughness: 0.78, metalness: 0.05 }),
-      sheerCurtain: new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.55,
-        transparent: true,
-        opacity: 0.62,
-        side: THREE.DoubleSide
-      }),
-      foliageGreen: new THREE.MeshStandardMaterial({ color: 0x6f9974, roughness: 0.78 }),
-      rosePetal: new THREE.MeshStandardMaterial({ color: 0xf49bb0, roughness: 0.64 }),
-      softRosePetal: new THREE.MeshStandardMaterial({ color: 0xffd1db, roughness: 0.64 }),
-      stainedGlass: new THREE.MeshStandardMaterial({
-        map: stainedGlassTex,
-        emissive: new THREE.Color(0xfff0cc),
-        emissiveIntensity: 0.34,
-        roughness: 0.22
-      }),
-      crystal: new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissive: new THREE.Color(0xffe7b8),
-        emissiveIntensity: 0.55,
-        roughness: 0.14,
-        metalness: 0.2
-      }),
-      marble: new THREE.MeshStandardMaterial({ color: 0xfff5f0, roughness: 0.32, metalness: 0.08 }),
-      hearthDark: new THREE.MeshStandardMaterial({ color: 0x3b2c32, roughness: 0.68 }),
-      mirror: new THREE.MeshStandardMaterial({ color: 0xe6f2f8, roughness: 0.12, metalness: 0.85 })
-    };
-
-    // =========================================================
-    // 3. 조명 구성 (화사한 로코코 채광 & 샹들리에)
-    // =========================================================
-    const hemiLight = new THREE.HemisphereLight(0xfff7f4, 0xdfb6ae, 1.32);
-    hemiLight.position.set(0, WALL_H, 0);
-    scene.add(hemiLight);
-
-    const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
-    sunLight.position.set(6, 11, 9);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(1024, 1024);
-    sunLight.shadow.camera.near = 1;
-    sunLight.shadow.camera.far = 36;
-    const dCam = 13;
-    sunLight.shadow.camera.left = -dCam;
-    sunLight.shadow.camera.right = dCam;
-    sunLight.shadow.camera.top = dCam;
-    sunLight.shadow.camera.bottom = -dCam;
-    sunLight.shadow.bias = -0.0005;
-    scene.add(sunLight);
-
-    const bedWarmLight = new THREE.PointLight(0xffd7bc, 2.4, 13);
-    bedWarmLight.position.set(0, 3.8, -6.5);
-    scene.add(bedWarmLight);
-
-    const salonWarmLight = new THREE.PointLight(0xffe7cc, 2.2, 13);
-    salonWarmLight.position.set(0, 3.8, 6.8);
-    scene.add(salonWarmLight);
-
-    // =========================================================
-    // 4. 장미방 건축 구조
-    // =========================================================
-    const roomGroup = new THREE.Group();
-    scene.add(roomGroup);
-
-    const floorHitMeshes = [];
-
-    const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), mats.parquet);
-    floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.receiveShadow = true;
-    floorMesh.userData.surface = 'wood';
-    roomGroup.add(floorMesh);
-    floorHitMeshes.push(floorMesh);
-
-    const rugMesh = new THREE.Mesh(new THREE.CircleGeometry(6.4, 72), mats.roundRug);
-    rugMesh.rotation.x = -Math.PI / 2;
-    rugMesh.position.set(0, 0.014, 0.2);
-    rugMesh.receiveShadow = true;
-    rugMesh.userData.surface = 'carpet';
-    roomGroup.add(rugMesh);
-    floorHitMeshes.push(rugMesh);
-
-    const ceilingMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(ROOM_W, ROOM_D),
-      new THREE.MeshStandardMaterial({ color: 0xfff3ee, roughness: 0.82 })
-    );
-    ceilingMesh.rotation.x = Math.PI / 2;
-    ceilingMesh.position.y = WALL_H;
-    roomGroup.add(ceilingMesh);
-
-    function buildWallWithPanels(width, height, pos, rotY, panelCount) {
-      const wg = new THREE.Group();
-      wg.position.copy(pos);
-      wg.rotation.y = rotY;
-
-      const wall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), mats.wallpaper);
-      wall.receiveShadow = true;
-      wg.add(wall);
-
-      const plinth = new THREE.Mesh(new THREE.BoxGeometry(width, 0.45, 0.14), mats.sageMolding);
-      plinth.position.set(0, -height / 2 + 0.225, 0.07);
-      wg.add(plinth);
-
-      const chairRail = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, 0.14), mats.blushTrim);
-      chairRail.position.set(0, -height / 2 + 1.15, 0.07);
-      wg.add(chairRail);
-
-      const crown = new THREE.Mesh(new THREE.BoxGeometry(width, 0.34, 0.26), mats.ivoryWood);
-      crown.position.set(0, height / 2 - 0.17, 0.12);
-      wg.add(crown);
-
-      const span = width / panelCount;
-      for (let i = 0; i <= panelCount; i++) {
-        const px = -width / 2 + i * span;
-        const pilaster = new THREE.Mesh(new THREE.BoxGeometry(0.28, height - 0.5, 0.14), mats.sageMolding);
-        pilaster.position.set(px, 0, 0.07);
-        wg.add(pilaster);
-      }
-
-      roomGroup.add(wg);
-    }
-
-    buildWallWithPanels(ROOM_W, WALL_H, new THREE.Vector3(0, WALL_H / 2, -HALF_D), 0, 4);
-    buildWallWithPanels(ROOM_W, WALL_H, new THREE.Vector3(0, WALL_H / 2, HALF_D), Math.PI, 4);
-    buildWallWithPanels(ROOM_D, WALL_H, new THREE.Vector3(-HALF_W, WALL_H / 2, 0), Math.PI / 2, 5);
-    buildWallWithPanels(ROOM_D, WALL_H, new THREE.Vector3(HALF_W, WALL_H / 2, 0), -Math.PI / 2, 5);
-
-    function buildStainedGlassWindow(x, y, z, rotY, w, h) {
-      const sg = new THREE.Group();
-      sg.position.set(x, y, z);
-      sg.rotation.y = rotY;
-
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mats.stainedGlass);
-      glass.position.z = 0.06;
-      sg.add(glass);
-
-      const topBar = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.22, 0.18), mats.sageMolding);
-      topBar.position.set(0, h / 2 + 0.08, 0.09);
-      const botBar = topBar.clone();
-      botBar.position.set(0, -h / 2 - 0.08, 0.09);
-      const leftBar = new THREE.Mesh(new THREE.BoxGeometry(0.22, h, 0.18), mats.sageMolding);
-      leftBar.position.set(-w / 2 - 0.08, 0, 0.09);
-      const rightBar = leftBar.clone();
-      rightBar.position.set(w / 2 + 0.08, 0, 0.09);
-
-      sg.add(topBar, botBar, leftBar, rightBar);
-      roomGroup.add(sg);
-    }
-
-    buildStainedGlassWindow(-6.4, 3.6, -HALF_D + 0.04, 0, 2.2, 4.4);
-    buildStainedGlassWindow(6.4, 3.6, -HALF_D + 0.04, 0, 2.2, 4.4);
-    buildStainedGlassWindow(-3.3, 5.45, -HALF_D + 0.04, 0, 3.6, 1.1);
-    buildStainedGlassWindow(3.3, 5.45, -HALF_D + 0.04, 0, 3.6, 1.1);
-
-    const vineGroup = new THREE.Group();
-    vineGroup.position.set(0, 0, -HALF_D + 0.55);
-    const vinePts = [];
-    for (let i = 0; i <= 36; i++) {
-      const t = (i / 36) * Math.PI;
-      const vx = -Math.cos(t) * 5.2;
-      const vy = 1.1 + Math.sin(t) * 4.25;
-      vinePts.push(new THREE.Vector3(vx, vy, 0));
-    }
-    const vineCurve = new THREE.CatmullRomCurve3(vinePts);
-    const vineStem = new THREE.Mesh(new THREE.TubeGeometry(vineCurve, 44, 0.08, 8, false), mats.foliageGreen);
-    vineGroup.add(vineStem);
-
-    for (let i = 0; i <= 38; i++) {
-      const p = vineCurve.getPoint(i / 38);
-      const leaf = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), mats.foliageGreen);
-      leaf.scale.set(1.3, 0.45, 0.9);
-      leaf.position.set(
-        p.x + Math.sin(i * 2.1) * 0.24,
-        p.y + Math.cos(i * 1.7) * 0.22,
-        p.z + Math.sin(i * 1.3) * 0.16
-      );
-      leaf.rotation.set(i * 0.5, i * 0.8, i * 0.3);
-      vineGroup.add(leaf);
-
-      if (i % 3 === 1) {
-        const rose = new THREE.Mesh(
-          new THREE.SphereGeometry(0.14, 10, 10),
-          i % 6 === 1 ? mats.rosePetal : mats.softRosePetal
-        );
-        rose.position.set(leaf.position.x, leaf.position.y + 0.05, leaf.position.z + 0.12);
-        vineGroup.add(rose);
-      }
-    }
-    roomGroup.add(vineGroup);
-
-    [-4.8, 0, 4.8].forEach((wx, idx) => {
-      const cg = new THREE.Group();
-      cg.position.set(wx, 0, HALF_D - 0.18);
-      cg.rotation.y = Math.PI;
-
-      const sheer = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.2), mats.sheerCurtain);
-      sheer.position.set(0, 2.75, 0.05);
-      cg.add(sheer);
-
-      [-1.15, 1.15].forEach((sideX) => {
-        const drape = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 5.2, 14, 1, true), mats.beigeDrapery);
-        drape.scale.set(1.1, 1, 0.45);
-        drape.position.set(sideX, 2.75, 0.16);
-        drape.castShadow = true;
-        cg.add(drape);
-      });
-
-      const pelmet = new THREE.Mesh(new THREE.BoxGeometry(2.95, 0.55, 0.34), mats.beigeDrapery);
-      pelmet.position.set(0, 5.15, 0.18);
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 12), mats.goldLeaf);
-      rod.rotation.z = Math.PI / 2;
-      rod.position.set(0, 5.45, 0.22);
-      cg.add(pelmet, rod);
-
-      if (idx === 1) {
-        const miniTable = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.42, 0.65, 20), mats.ivoryWood);
-        miniTable.position.set(0, 0.325, 1.35);
-        const miniTop = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.06, 20), mats.marble);
-        miniTop.position.set(0, 0.66, 1.35);
-        cg.add(miniTable, miniTop);
-      }
-
-      roomGroup.add(cg);
-    });
-
-    const chandeliers = [];
-    [-5.2, 0, 5.2].forEach((cx, idx) => {
-      const ch = new THREE.Group();
-      ch.position.set(cx, WALL_H - 1.15, idx === 1 ? -1.2 : 1.6);
-
-      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.15, 8), mats.goldLeaf);
-      chain.position.y = 0.575;
-      ch.add(chain);
-
-      const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.045, 10, 28), mats.goldLeaf);
-      crownRing.rotation.x = Math.PI / 2;
-      ch.add(crownRing);
-
-      const lowerRing = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.035, 10, 24), mats.goldLeaf);
-      lowerRing.rotation.x = Math.PI / 2;
-      lowerRing.position.y = -0.35;
-      ch.add(lowerRing);
-
-      for (let k = 0; k < 14; k++) {
-        const a = (k / 14) * Math.PI * 2;
-        const drop = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), mats.crystal);
-        drop.scale.set(0.8, 1.6, 0.8);
-        drop.position.set(Math.cos(a) * 0.75, -0.18, Math.sin(a) * 0.75);
-        ch.add(drop);
-      }
-
-      const coreGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), mats.crystal);
-      coreGlow.position.y = -0.12;
-      ch.add(coreGlow);
-
-      roomGroup.add(ch);
-      chandeliers.push(ch);
-    });
-
-    // =========================================================
-    // 5. 주요 가구 & 소품 배치
-    // =========================================================
-    const obstacles = [];
-    function addObstacle(x, z, r) {
-      obstacles.push({ x, z, r });
-    }
-
-    const bedGroup = new THREE.Group();
-    bedGroup.position.set(0, 0, -7.4);
-
-    const dais = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.18, 4.2), mats.ivoryWood);
-    dais.position.y = 0.09;
-    dais.receiveShadow = true;
-    bedGroup.add(dais);
-
-    const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.42, 3.1), mats.roseVelvet);
-    mattress.position.set(0, 0.52, 0.1);
-    mattress.castShadow = true;
-    mattress.receiveShadow = true;
-    bedGroup.add(mattress);
-
-    const duvet = new THREE.Mesh(new THREE.BoxGeometry(2.54, 0.2, 2.1), mats.burgundyVelvet);
-    duvet.position.set(0, 0.76, 0.45);
-    duvet.castShadow = true;
-    bedGroup.add(duvet);
-
-    const headboard = new THREE.Mesh(new THREE.BoxGeometry(2.75, 1.55, 0.22), mats.ivoryWood);
-    headboard.position.set(0, 1.15, -1.42);
-    headboard.castShadow = true;
-    bedGroup.add(headboard);
-
-    const backCurtain = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.6), mats.burgundyVelvet);
-    backCurtain.position.set(0, 2.1, -1.65);
-    bedGroup.add(backCurtain);
-
-    const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(3.55, 0.35, 3.55), mats.ivoryWood);
-    canopyTop.position.set(0, 3.85, 0.05);
-    canopyTop.castShadow = true;
-    bedGroup.add(canopyTop);
-
-    const canopyValance = new THREE.Mesh(new THREE.BoxGeometry(3.45, 0.36, 0.2), mats.roseVelvet);
-    canopyValance.position.set(0, 3.55, 1.72);
-    bedGroup.add(canopyValance);
-
-    [[-1.62, 1.62], [1.62, 1.62]].forEach(([px, pz]) => {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 3.7, 12), mats.ivoryWood);
-      post.position.set(px, 1.95, pz);
-      post.castShadow = true;
-      bedGroup.add(post);
-
-      const sheerDrape = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 3.45, 12, 1, true), mats.sheerCurtain);
-      sheerDrape.position.set(px * 0.85, 1.82, pz - 0.1);
-      bedGroup.add(sheerDrape);
-    });
-
-    const footBench = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.52, 0.68), mats.ivoryWood);
-    footBench.position.set(0, 0.42, 2.25);
-    footBench.castShadow = true;
-    bedGroup.add(footBench);
-
-    const benchSeat = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.14, 0.58), mats.beigeDrapery);
-    benchSeat.position.set(0, 0.72, 2.25);
-    bedGroup.add(benchSeat);
-
-    roomGroup.add(bedGroup);
-    addObstacle(0, -7.4, 2.4);
-
-    const vanityGroup = new THREE.Group();
-    vanityGroup.position.set(-7.3, 0, -2.4);
-    vanityGroup.rotation.y = Math.PI / 2;
-
-    const vanityDesk = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.82, 0.85), mats.ivoryWood);
-    vanityDesk.position.set(0, 0.41, 0);
-    vanityDesk.castShadow = true;
-    vanityDesk.receiveShadow = true;
-    vanityGroup.add(vanityDesk);
-
-    const vanityTrim = new THREE.Mesh(new THREE.BoxGeometry(2.36, 0.06, 0.9), mats.goldLeaf);
-    vanityTrim.position.set(0, 0.84, 0);
-    vanityGroup.add(vanityTrim);
-
-    const mirrorMain = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.15, 0.08), mats.goldLeaf);
-    mirrorMain.position.set(0, 1.42, -0.22);
-    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.98), mats.mirror);
-    mirrorGlass.position.set(0, 1.42, -0.17);
-    vanityGroup.add(mirrorMain, mirrorGlass);
-
-    [-0.68, 0.68].forEach((mx, idx) => {
-      const sideMir = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.95, 0.07), mats.goldLeaf);
-      sideMir.position.set(mx, 1.32, -0.16);
-      sideMir.rotation.y = idx === 0 ? 0.35 : -0.35;
-      vanityGroup.add(sideMir);
-    });
-
-    const stool = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.48, 0.52), mats.blueVelvet);
-    stool.position.set(0, 0.24, 0.68);
-    vanityGroup.add(stool);
-
-    const sideDisplay = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.52, 0.76, 20), mats.ivoryWood);
-    sideDisplay.position.set(1.85, 0.38, 0.05);
-    const hatBox = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.26, 18), mats.burgundyVelvet);
-    hatBox.position.set(1.85, 0.89, 0.05);
-    vanityGroup.add(sideDisplay, hatBox);
-
-    roomGroup.add(vanityGroup);
-    addObstacle(-7.3, -2.4, 1.5);
-
-    const chaiseGroup = new THREE.Group();
-    chaiseGroup.position.set(6.8, 0, -2.8);
-    chaiseGroup.rotation.y = -Math.PI / 2.2;
-
-    const chaiseBody = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.44, 1.85), mats.blueVelvet);
-    chaiseBody.position.set(0, 0.28, 0);
-    chaiseBody.castShadow = true;
-    chaiseGroup.add(chaiseBody);
-
-    const chaiseBack = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.72, 0.22), mats.ivoryWood);
-    chaiseBack.position.set(0, 0.66, -0.82);
-    chaiseGroup.add(chaiseBack);
-
-    const chaiseThrow = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.08, 0.95), mats.sheerCurtain);
-    chaiseThrow.position.set(0, 0.52, 0.32);
-    chaiseGroup.add(chaiseThrow);
-
-    roomGroup.add(chaiseGroup);
-    addObstacle(6.8, -2.8, 1.25);
-
-    const fireplaceGroup = new THREE.Group();
-    fireplaceGroup.position.set(HALF_W - 0.45, 0, 2.6);
-    fireplaceGroup.rotation.y = -Math.PI / 2;
-
-    [-1.05, 1.05].forEach((px) => {
-      const jamb = new THREE.Mesh(new THREE.BoxGeometry(0.38, 1.35, 0.55), mats.marble);
-      jamb.position.set(px, 0.675, 0);
-      jamb.castShadow = true;
-      fireplaceGroup.add(jamb);
-    });
-
-    const mantel = new THREE.Mesh(new THREE.BoxGeometry(2.75, 0.26, 0.68), mats.marble);
-    mantel.position.set(0, 1.48, 0.05);
-    mantel.castShadow = true;
-    fireplaceGroup.add(mantel);
-
-    const hearthBox = new THREE.Mesh(new THREE.BoxGeometry(1.75, 1.25, 0.32), mats.hearthDark);
-    hearthBox.position.set(0, 0.625, -0.05);
-    fireplaceGroup.add(hearthBox);
-
-    const vase = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 0.42, 14), mats.ivoryWood);
-    vase.position.set(0, 1.82, 0.05);
-    const roseCluster = new THREE.Mesh(new THREE.DodecahedronGeometry(0.34, 1), mats.rosePetal);
-    roseCluster.position.set(0, 2.15, 0.05);
-    fireplaceGroup.add(vase, roseCluster);
-
-    roomGroup.add(fireplaceGroup);
-    addObstacle(HALF_W - 0.8, 2.6, 1.3);
-
-    function buildTeaTable(x, z, radius, clothMat, chairCount) {
-      const tg = new THREE.Group();
-      tg.position.set(x, 0, z);
-
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.16, 0.72, 12), mats.ivoryWood);
-      leg.position.y = 0.36;
-      leg.castShadow = true;
-      tg.add(leg);
-
-      const cloth = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.14, 0.74, 24), clothMat);
-      cloth.position.y = 0.38;
-      cloth.castShadow = true;
-      cloth.receiveShadow = true;
-      tg.add(cloth);
-
-      const laceTop = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.85, radius * 0.85, 0.03, 24), mats.ivoryWood);
-      laceTop.position.y = 0.76;
-      tg.add(laceTop);
-
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.22, 12), mats.ivoryWood);
-      pot.position.y = 0.88;
-      const blooms = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2, 1), mats.lavenderVelvet);
-      blooms.position.y = 1.06;
-      tg.add(pot, blooms);
-
-      for (let i = 0; i < chairCount; i++) {
-        const ang = (i / chairCount) * Math.PI * 2 + 0.5;
-        const dist = radius + 0.52;
-        const ch = new THREE.Group();
-        ch.position.set(Math.cos(ang) * dist, 0, Math.sin(ang) * dist);
-        ch.lookAt(x, 0, z);
-
-        const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.12, 16), mats.beigeDrapery);
-        seat.position.y = 0.46;
-        seat.castShadow = true;
-        ch.add(seat);
-
-        for (let l = 0; l < 4; l++) {
-          const la = (l / 4) * Math.PI * 2 + 0.4;
-          const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 0.44, 8), mats.ivoryWood);
-          legMesh.position.set(Math.cos(la) * 0.22, 0.22, Math.sin(la) * 0.22);
-          ch.add(legMesh);
-        }
-
-        const back = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.52, 0.08), mats.ivoryWood);
-        back.position.set(0, 0.76, -0.26);
-        ch.add(back);
-
-        tg.add(ch);
-      }
-
-      roomGroup.add(tg);
-      addObstacle(x, z, radius + 0.35);
-    }
-
-    buildTeaTable(2.3, 2.2, 0.72, mats.blueVelvet, 2);
-    buildTeaTable(3.6, 4.1, 0.66, mats.roseVelvet, 1);
-
-    // =========================================================
-    // 6. 장미방 8개 편지 단서 마커
-    // =========================================================
-    const CLUES = [
-      {
-        id: 'rose-arch',
-        title: '장미 덩굴 아치 아래 남겨진 편지',
-        greeting: '장미 화환이 드리운 자리에서 · 비밀 쪽지',
-        quote: '“장미 꽃잎이 떨어지듯, 이 방의 모든 시선이 나를 향하고 있어요.”',
-        body: '초록 덩굴과 분홍 장미가 아치형으로 감싸고 스테인드글라스 채광이 스며드는 장미방의 가장 화사한 자리에서 발견한 편지입니다.',
-        pos: new THREE.Vector3(0, 1.55, -5.2),
-        walkPos: new THREE.Vector3(0, EYE_HEIGHT, -3.4)
-      },
-      {
-        id: 'canopy-bed',
-        title: '버건디 커튼 뒤의 짧은 편지',
-        greeting: '캐노피 침대 머리맡 · 접힌 편지지',
-        quote: '“짙은 장미빛 커튼 뒤에서는 황궁의 소란도 잠시 멈추죠.”',
-        body: '단상 위의 아이보리 침대와 버건디 벨벳 커튼 사이, 조용한 밤에만 펼쳐 보던 짧은 편지가 놓여 있습니다.',
-        pos: new THREE.Vector3(0, 1.45, -7.2),
-        walkPos: new THREE.Vector3(0, EYE_HEIGHT, -4.3)
-      },
-      {
-        id: 'vanity-mirror',
-        title: '3단 거울 화장대 서랍의 편지',
-        greeting: '화장대 보석함 옆 · 향기 나는 편지',
-        quote: '“가장 화사한 장미가 어울리는 날, 거울 속 나도 특별해 보여야 해요.”',
-        body: '세 개의 거울과 모자·보석함이 놓인 화장대 위, 장미 향수가 살짝 배어 있는 분홍빛 편지입니다.',
-        pos: new THREE.Vector3(-6.5, 1.4, -2.4),
-        walkPos: new THREE.Vector3(-4.6, EYE_HEIGHT, -2.4)
-      },
-      {
-        id: 'blue-chaise',
-        title: '파스텔 블루 셰즈롱 쿠션 밑 편지',
-        greeting: '하늘빛 셰즈롱 위 · 낮잠 시간의 편지',
-        quote: '“연한 하늘빛 벨벳 위에 기대면 오후의 나른함이 살포시 내려앉아요.”',
-        body: '장미 무늬 벽지와 어우러진 파스텔 블루 셰즈롱 위에 살짝 접어 둔 오후의 편지입니다.',
-        pos: new THREE.Vector3(6.1, 1.25, -2.8),
-        walkPos: new THREE.Vector3(4.3, EYE_HEIGHT, -2.8)
-      },
-      {
-        id: 'marble-fireplace',
-        title: '대리석 벽난로 장미 화병 옆 편지',
-        greeting: '벽난로 선반 위 · 따뜻한 편지',
-        quote: '“꽃다발이 시들지 않도록, 따뜻한 온기만 남겨둘게요.”',
-        body: '크림빛 대리석 벽난로 선반 위 장미 화병 곁에 기대어 놓인 다정한 편지입니다.',
-        pos: new THREE.Vector3(6.6, 1.75, 2.6),
-        walkPos: new THREE.Vector3(4.5, EYE_HEIGHT, 2.6)
-      },
-      {
-        id: 'blue-tea-table',
-        title: '플로럴 티테이블 찻잔 옆 편지',
-        greeting: '다과 테이블 위 · 초대 편지',
-        quote: '“달콤한 다과와 향긋한 차 한 잔이면, 오늘 하루도 완벽해요.”',
-        body: '푸른빛 플로럴 테이블보 위, 차를 마시며 나누려던 이야기가 적힌 편지입니다.',
-        pos: new THREE.Vector3(2.3, 1.35, 2.2),
-        walkPos: new THREE.Vector3(0.7, EYE_HEIGHT, 2.2)
-      },
-      {
-        id: 'rose-tea-table',
-        title: '로즈 벨벳 티테이블 레이스 위 편지',
-        greeting: '작은 원형 테이블 · 속삭이는 편지',
-        quote: '“분홍빛 레이스가 둘러진 자리에서 나누는 이야기들은 언제나 달콤하죠.”',
-        body: '로즈 벨벳 크로스와 레이스가 어우러진 작은 티테이블 위에 놓인 비밀스러운 편지입니다.',
-        pos: new THREE.Vector3(3.6, 1.3, 4.1),
-        walkPos: new THREE.Vector3(1.8, EYE_HEIGHT, 4.5)
-      },
-      {
-        id: 'draped-windows',
-        title: '아치형 커튼 창가에서 발견한 편지',
-        greeting: '창가 살롱 · 햇살 머금은 편지',
-        quote: '“빛이 쏟아지는 창가와 반짝이는 샹들리에 아래, 이곳은 나만의 무대예요.”',
-        body: '로즈 베이지 커튼이 드리운 창가와 세 개의 크리스털 샹들리에 아래에서 발견한 편지입니다.',
-        pos: new THREE.Vector3(0, 1.6, 8.6),
-        walkPos: new THREE.Vector3(0, EYE_HEIGHT, 6.4)
-      }
-    ];
-
-    const discovered = new Set();
-    const clueMarkers = [];
-    const markerMatDefault = new THREE.MeshStandardMaterial({
-      color: 0xffe0e8,
-      emissive: 0xf07894,
-      emissiveIntensity: 0.85,
-      roughness: 0.18,
-      metalness: 0.5
-    });
-    const markerMatFound = new THREE.MeshStandardMaterial({
-      color: 0xfff0ba,
-      emissive: 0xe0ad52,
-      emissiveIntensity: 0.5,
-      roughness: 0.24,
-      metalness: 0.65
-    });
-
-    CLUES.forEach((clue, idx) => {
-      const mg = new THREE.Group();
-      mg.position.copy(clue.pos);
-
-      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.25, 0), markerMatDefault.clone());
-      gem.scale.set(0.85, 1.35, 0.85);
-      gem.userData = { clueIndex: idx };
-      mg.add(gem);
-
-      const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.32, 0.38, 24),
-        new THREE.MeshBasicMaterial({ color: 0xfff0f4, side: THREE.DoubleSide, transparent: true, opacity: 0.78 })
-      );
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = -0.32;
-      mg.add(ring);
-
-      scene.add(mg);
-      clueMarkers.push({ group: mg, gem, ring, baseY: clue.pos.y, index: idx });
-    });
-
-    // =========================================================
-    // 7. Web Audio (오르골·하프 아르페지오 배경음 + 바닥 재질별 발소리)
-    // =========================================================
-    const audioCtxHolder = { ctx: null, enabled: true, timerId: null, step: 0 };
-
-    function ensureAudio() {
-      if (!audioCtxHolder.ctx) {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) audioCtxHolder.ctx = new Ctx();
-      }
-      if (audioCtxHolder.ctx && audioCtxHolder.ctx.state === 'suspended') {
-        audioCtxHolder.ctx.resume().catch(() => {});
-      }
-      return audioCtxHolder.ctx;
-    }
-
-    const ARP_NOTES = [
-      523.25, 659.25, 783.99, 987.77,
-      493.88, 659.25, 783.99, 987.77,
-      440.00, 659.25, 783.99, 880.00,
-      392.00, 587.33, 783.99, 987.77
-    ];
-
-    function playArpNote(freq) {
-      if (!audioCtxHolder.enabled) return;
-      const ctx = ensureAudio();
-      if (!ctx) return;
-
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.036, now + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 1.45);
-    }
-
-    function startMusicLoop() {
-      if (audioCtxHolder.timerId) return;
-      audioCtxHolder.timerId = setInterval(() => {
-        if (!audioCtxHolder.enabled) return;
-        const note = ARP_NOTES[audioCtxHolder.step % ARP_NOTES.length];
-        playArpNote(note);
-        audioCtxHolder.step += 1;
-      }, 420);
-    }
-
-    function playFootstep(surface) {
-      if (!audioCtxHolder.enabled) return;
-      const ctx = ensureAudio();
-      if (!ctx) return;
-
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      if (surface === 'carpet') {
-        // 폭신한 러그/카펫 발소리
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(125, now);
-        osc.frequency.exponentialRampToValueAtTime(54, now + 0.1);
-        gain.gain.setValueAtTime(0.075, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-      } else {
-        // 원목 마루 발소리
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(215, now);
-        osc.frequency.exponentialRampToValueAtTime(82, now + 0.08);
-        gain.gain.setValueAtTime(0.085, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-      }
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.12);
-    }
-
-    // =========================================================
-    // 8. UI & 상호작용
-    // =========================================================
-    const clueCountEl = document.getElementById('clue-count');
-    const viewToggleBtn = document.getElementById('view-toggle');
-    const audioToggleBtn = document.getElementById('audio-toggle');
-    const guideToast = document.getElementById('guide-toast');
-    const introOverlay = document.getElementById('intro-overlay');
-    const enterBtn = document.getElementById('enter-btn');
-    const scrim = document.getElementById('scrim');
-    const detailSheet = document.getElementById('detail-sheet');
-    const detailTitle = document.getElementById('detail-title');
-    const detailGreeting = document.getElementById('detail-greeting');
-    const detailQuote = document.getElementById('detail-quote');
-    const detailBody = document.getElementById('detail-body');
-    const walkHereBtn = document.getElementById('walk-here-btn');
-    const closeSheetBtn = document.getElementById('close-sheet-btn');
-
-    let activeClue = null;
-
-    function openClueSheet(clue, index) {
-      activeClue = clue;
-      detailTitle.textContent = clue.title;
-      detailGreeting.textContent = clue.greeting;
-      detailQuote.textContent = clue.quote;
-      detailBody.textContent = clue.body;
-
-      if (!discovered.has(index)) {
-        discovered.add(index);
-        clueCountEl.textContent = String(discovered.size);
-        const m = clueMarkers[index];
-        if (m) m.gem.material = markerMatFound;
-      }
-
-      scrim.classList.add('open');
-      detailSheet.classList.add('open');
-    }
-
-    function closeClueSheet() {
-      scrim.classList.remove('open');
-      detailSheet.classList.remove('open');
-      activeClue = null;
-    }
-
-    closeSheetBtn.addEventListener('click', closeClueSheet);
-    scrim.addEventListener('click', closeClueSheet);
-
-    walkHereBtn.addEventListener('click', () => {
-      if (!activeClue) return;
-      const dest = activeClue.walkPos.clone();
-      closeClueSheet();
-      if (isOverview) {
-        toggleViewMode(false);
-      }
-      player.targetPos = dest;
-    });
-
-    function toggleViewMode(forceOverview) {
-      isOverview = typeof forceOverview === 'boolean' ? forceOverview : !isOverview;
-      if (isOverview) {
-        viewToggleBtn.textContent = '👁️ 눈높이 시점';
-        viewToggleBtn.classList.add('active');
-        guideToast.textContent = '전체 조망 뷰 · 바닥을 탭하면 그 자리로 먼저 이동합니다';
-      } else {
-        viewToggleBtn.textContent = '🏛️ 전체 조망 뷰';
-        viewToggleBtn.classList.remove('active');
-        guideToast.textContent = '바닥·가구 탭으로 이동 · 드래그로 시선 회전';
-      }
-    }
-
-    viewToggleBtn.addEventListener('click', () => toggleViewMode());
-
-    audioToggleBtn.addEventListener('click', () => {
-      audioCtxHolder.enabled = !audioCtxHolder.enabled;
-      if (audioCtxHolder.enabled) {
-        ensureAudio();
-        startMusicLoop();
-        audioToggleBtn.textContent = '♪ 음악 ON';
-        audioToggleBtn.classList.add('active');
-      } else {
-        audioToggleBtn.textContent = '♪ 음악 OFF';
-        audioToggleBtn.classList.remove('active');
-      }
-    });
-
-    enterBtn.addEventListener('click', () => {
-      introOverlay.classList.add('hidden');
-      ensureAudio();
-      startMusicLoop();
-    });
-
-    const raycaster = new THREE.Raycaster();
-    const pointerNdc = new THREE.Vector2();
-
-    function clampToRoom(v) {
-      const margin = 1.1;
-      v.x = Math.max(-HALF_W + margin, Math.min(HALF_W - margin, v.x));
-      v.z = Math.max(-HALF_D + margin, Math.min(HALF_D - margin, v.z));
-      for (const ob of obstacles) {
-        const dx = v.x - ob.x;
-        const dz = v.z - ob.z;
-        const dist = Math.hypot(dx, dz);
-        const minDist = ob.r + 0.55;
-        if (dist < minDist && dist > 0.0001) {
-          v.x = ob.x + (dx / dist) * minDist;
-          v.z = ob.z + (dz / dist) * minDist;
-        }
-      }
-      v.y = EYE_HEIGHT;
-      return v;
-    }
-
-    let pointerDownPos = { x: 0, y: 0 };
-    let isDragging = false;
-    let lastDragPos = { x: 0, y: 0 };
-
-    renderer.domElement.addEventListener('pointerdown', (e) => {
-      if (detailSheet.classList.contains('open')) return;
-      ensureAudio();
-      pointerDownPos = { x: e.clientX, y: e.clientY };
-      lastDragPos = { x: e.clientX, y: e.clientY };
-      isDragging = true;
-    });
-
-    window.addEventListener('pointermove', (e) => {
-      if (!isDragging || detailSheet.classList.contains('open')) return;
-      const dx = e.clientX - lastDragPos.x;
-      const dy = e.clientY - lastDragPos.y;
-      lastDragPos = { x: e.clientX, y: e.clientY };
-
-      if (!isOverview) {
-        player.yaw -= dx * 0.0052;
-        player.pitch = Math.max(-0.52, Math.min(0.52, player.pitch - dy * 0.0042));
-      } else {
-        overviewState.targetPos.x = Math.max(-7.5, Math.min(7.5, overviewState.targetPos.x - dx * 0.015));
-        overviewState.targetPos.z = Math.max(3.0, Math.min(16.5, overviewState.targetPos.z - dy * 0.015));
-      }
-    });
-
-    window.addEventListener('pointerup', (e) => {
-      if (!isDragging) return;
-      isDragging = false;
-      if (detailSheet.classList.contains('open')) return;
-
-      const movedDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
-      if (movedDist > 9) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(pointerNdc, camera);
-
-      // 1) 반짝이는 편지 단서 선택
-      const gemTargets = clueMarkers.map((m) => m.gem);
-      const gemHits = raycaster.intersectObjects(gemTargets, false);
-      if (gemHits.length > 0) {
-        const idx = gemHits[0].object.userData.clueIndex;
-        if (typeof idx === 'number' && CLUES[idx]) {
-          openClueSheet(CLUES[idx], idx);
-          return;
-        }
-      }
-
-      // 2) 바닥 탭 이동: 전체 조망 뷰에서는 시점을 강제로 낮추지 않고 이동 목표만 설정
-      const floorHits = raycaster.intersectObjects(floorHitMeshes, false);
-      if (floorHits.length > 0) {
-        const pt = floorHits[0].point.clone();
-        const dest = clampToRoom(pt);
-        player.targetPos = dest;
-        if (isOverview) {
-          guideToast.textContent = '선택한 위치로 이동 중 · 눈높이 보기는 상단 [👁️ 눈높이 시점] 버튼';
-        }
-      }
-    });
-
-    // =========================================================
-    // 9. 애니메이션 루프
-    // =========================================================
-    const clock = new THREE.Clock();
-    let stepAccum = 0;
-
-    function updatePlayerMovement(dt) {
-      if (player.targetPos) {
-        const toTarget = new THREE.Vector3().subVectors(player.targetPos, player.pos);
-        toTarget.y = 0;
-        const dist = toTarget.length();
-        if (dist < 0.12) {
-          player.targetPos = null;
-        } else {
-          toTarget.normalize();
-          const stepLen = Math.min(dist, player.moveSpeed * dt);
-          player.pos.addScaledVector(toTarget, stepLen);
-          clampToRoom(player.pos);
-
-          const desiredYaw = Math.atan2(-toTarget.x, -toTarget.z);
-          let diff = desiredYaw - player.yaw;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          player.yaw += diff * Math.min(1, dt * 7);
-
-          const onRug = Math.hypot(player.pos.x, player.pos.z - 0.2) <= 6.4;
-          player.surface = onRug ? 'carpet' : 'wood';
-          stepAccum += stepLen;
-          if (stepAccum >= 1.05) {
-            stepAccum = 0;
-            playFootstep(player.surface);
-          }
-        }
-      }
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const dt = Math.min(clock.getDelta(), 0.05);
-      const elapsed = clock.getElapsedTime();
-
-      updatePlayerMovement(dt);
-
-      clueMarkers.forEach((m) => {
-        m.gem.rotation.y = elapsed * 1.6 + m.index;
-        m.gem.position.y = Math.sin(elapsed * 2.4 + m.index) * 0.08;
-        m.ring.position.y = -0.32 + Math.sin(elapsed * 2.4 + m.index) * 0.06;
-      });
-
-      chandeliers.forEach((ch, i) => {
-        ch.rotation.z = Math.sin(elapsed * 0.9 + i) * 0.015;
-      });
-
-      if (isOverview) {
-        overviewState.pos.lerp(overviewState.targetPos, Math.min(1, dt * 6));
-        overviewState.lookAt.lerp(overviewState.targetLookAt, Math.min(1, dt * 6));
-        camera.position.copy(overviewState.pos);
-        camera.lookAt(overviewState.lookAt);
-      } else {
-        const bob = player.targetPos ? Math.sin(elapsed * 12) * 0.035 : Math.sin(elapsed * 1.8) * 0.008;
-        camera.position.set(player.pos.x, player.pos.y + bob, player.pos.z);
-
-        const euler = new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ');
-        camera.quaternion.setFromEuler(euler);
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    animate();
-  </script>
-</body>
-</html>
+    function makeGravelTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d
