@@ -138,13 +138,14 @@
       background: radial-gradient(circle at 50% 35%, rgba(116, 52, 72, 0.75), rgba(28, 14, 21, 0.93));
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      transition: opacity 0.45s ease, visibility 0.45s ease;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
     }
 
     #intro-overlay.hidden {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+      display: none;
     }
 
     .intro-card {
@@ -379,6 +380,27 @@
     </div>
   </section>
 
+  <script>
+    // 인트로 버튼은 Three.js 로드 여부와 무관하게 즉시 닫히도록 먼저 바인딩
+    (function bindIntroFallback() {
+      const btn = document.getElementById('enter-btn');
+      const overlay = document.getElementById('intro-overlay');
+      if (btn && overlay) {
+        btn.addEventListener('click', function () {
+          overlay.classList.add('hidden');
+          overlay.style.display = 'none';
+          try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) {
+              const c = new Ctx();
+              if (c.state === 'suspended') c.resume();
+            }
+          } catch (_) {}
+        });
+      }
+    })();
+  </script>
+
   <script type="importmap">
     {
       "imports": {
@@ -390,9 +412,6 @@
   <script type="module">
     import * as THREE from 'three';
 
-    // =========================================================
-    // 1. 렌더러 & 공용 상태
-    // =========================================================
     const wrap = document.getElementById('canvas-wrap');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf8e7e8);
@@ -410,7 +429,7 @@
     const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 180);
     const EYE_HEIGHT = 1.62;
 
-    let currentZone = 'chamber'; // 'chamber' | 'garden'
+    let currentZone = 'chamber';
     let isOverview = false;
 
     const player = {
@@ -430,9 +449,6 @@
       targetLookAt: new THREE.Vector3(0, 1.0, -0.5)
     };
 
-    // =========================================================
-    // 2. 프로시저럴 텍스처 생성기
-    // =========================================================
     function makeRoseWallpaperTexture() {
       const c = document.createElement('canvas');
       c.width = 512;
@@ -742,7 +758,6 @@
       marble: new THREE.MeshStandardMaterial({ color: 0xfff5f0, roughness: 0.32, metalness: 0.08 }),
       hearthDark: new THREE.MeshStandardMaterial({ color: 0x3b2c32, roughness: 0.68 }),
       mirror: new THREE.MeshStandardMaterial({ color: 0xe6f2f8, roughness: 0.12, metalness: 0.85 }),
-      // 정원 재질
       gravelPath: new THREE.MeshStandardMaterial({ map: gravelTex, roughness: 0.92 }),
       gardenLawn: new THREE.MeshStandardMaterial({ color: 0x88b97a, roughness: 0.88 }),
       parterreLawn: new THREE.MeshStandardMaterial({ color: 0x76ab69, roughness: 0.86 }),
@@ -760,9 +775,6 @@
       palaceRoof: new THREE.MeshStandardMaterial({ color: 0x8d9ea8, roughness: 0.55 })
     };
 
-    // =========================================================
-    // 3. 조명 구성
-    // =========================================================
     const hemiLight = new THREE.HemisphereLight(0xfff7f4, 0xdfb6ae, 1.35);
     hemiLight.position.set(0, 12, 0);
     scene.add(hemiLight);
@@ -781,9 +793,7 @@
     sunLight.shadow.bias = -0.0005;
     scene.add(sunLight);
 
-    // =========================================================
-    // 4. 플레이어 아바타 (항상 보이도록 유지 + 걸을 때 팔·다리·망토 모션)
-    // =========================================================
+    // 플레이어 아바타
     const avatarGroup = new THREE.Group();
     scene.add(avatarGroup);
 
@@ -803,7 +813,6 @@
       const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe2d6, roughness: 0.6 });
       const hairMat = new THREE.MeshStandardMaterial({ color: 0x6e424c, roughness: 0.7 });
 
-      // 발목/다리
       const legGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.68, 10);
       avatarParts.leftLeg = new THREE.Mesh(legGeo, trimMat);
       avatarParts.leftLeg.position.set(-0.11, 0.34, 0);
@@ -813,17 +822,14 @@
       avatarParts.rightLeg.position.set(0.11, 0.34, 0);
       avatarParts.rightLeg.castShadow = true;
 
-      // 플레어 스커트
       avatarParts.skirt = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.66, 20), dressMat);
       avatarParts.skirt.position.set(0, 0.84, 0);
       avatarParts.skirt.castShadow = true;
 
-      // 상의
       avatarParts.body = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.21, 0.46, 14), dressMat);
       avatarParts.body.position.set(0, 1.28, 0);
       avatarParts.body.castShadow = true;
 
-      // 팔
       const armGeo = new THREE.CylinderGeometry(0.048, 0.042, 0.44, 10);
       avatarParts.leftArm = new THREE.Mesh(armGeo, skinMat);
       avatarParts.leftArm.position.set(-0.24, 1.26, 0);
@@ -833,7 +839,6 @@
       avatarParts.rightArm.position.set(0.24, 1.26, 0);
       avatarParts.rightArm.castShadow = true;
 
-      // 머리 & 헤어
       avatarParts.head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), skinMat);
       avatarParts.head.position.set(0, 1.66, 0);
       avatarParts.head.castShadow = true;
@@ -843,7 +848,6 @@
       hairCap.scale.set(1.02, 1.04, 1.08);
       avatarParts.head.add(hairCap);
 
-      // 발밑 부드러운 링 그림자
       const shadowRing = new THREE.Mesh(
         new THREE.RingGeometry(0.24, 0.42, 24),
         new THREE.MeshBasicMaterial({ color: 0x3b1e29, side: THREE.DoubleSide, transparent: true, opacity: 0.25 })
@@ -865,9 +869,7 @@
 
     buildAvatar();
 
-    // =========================================================
-    // 5. 장미방 실내 (ROOM_W = 18, ROOM_D = 22)
-    // =========================================================
+    // 장미방 실내
     const chamberGroup = new THREE.Group();
     scene.add(chamberGroup);
 
@@ -1069,7 +1071,6 @@
       chandeliers.push(ch);
     });
 
-    // 침대
     const bedGroup = new THREE.Group();
     bedGroup.position.set(0, 0, -7.4);
     const dais = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.18, 4.2), mats.ivoryWood);
@@ -1103,7 +1104,6 @@
     chamberGroup.add(bedGroup);
     chamberObstacles.push({ x: 0, z: -7.4, r: 2.4 });
 
-    // 화장대
     const vanityGroup = new THREE.Group();
     vanityGroup.position.set(-7.3, 0, -2.4);
     vanityGroup.rotation.y = Math.PI / 2;
@@ -1120,7 +1120,6 @@
     chamberGroup.add(vanityGroup);
     chamberObstacles.push({ x: -7.3, z: -2.4, r: 1.5 });
 
-    // 셰즈롱 & 벽난로
     const chaiseGroup = new THREE.Group();
     chaiseGroup.position.set(6.8, 0, -2.8);
     chaiseGroup.rotation.y = -Math.PI / 2.2;
@@ -1151,7 +1150,6 @@
     chamberGroup.add(fireplaceGroup);
     chamberObstacles.push({ x: HALF_W - 0.8, z: 2.6, r: 1.3 });
 
-    // 티테이블
     function buildTeaTable(x, z, radius, clothMat) {
       const tg = new THREE.Group();
       tg.position.set(x, 0, z);
@@ -1169,9 +1167,7 @@
     buildTeaTable(2.3, 2.2, 0.72, mats.blueVelvet);
     buildTeaTable(3.6, 4.1, 0.66, mats.roseVelvet);
 
-    // =========================================================
-    // 6. 슐라이스하임 궁전 정원 (Schleißheim Baroque Garden)
-    // =========================================================
+    // 슐라이스하임 궁전 정원
     const gardenGroup = new THREE.Group();
     gardenGroup.visible = false;
     scene.add(gardenGroup);
@@ -1181,7 +1177,6 @@
     const gardenFloorMeshes = [];
     const gardenObstacles = [];
 
-    // 잔디 대지
     const lawnBase = new THREE.Mesh(new THREE.PlaneGeometry(GARDEN_W, GARDEN_D), mats.gardenLawn);
     lawnBase.rotation.x = -Math.PI / 2;
     lawnBase.receiveShadow = true;
@@ -1189,7 +1184,6 @@
     gardenGroup.add(lawnBase);
     gardenFloorMeshes.push(lawnBase);
 
-    // 중앙 직선 수로 축 (z: -24 ~ +22, 폭 5.2m)
     const canalWater = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 46), mats.canalWater);
     canalWater.rotation.x = -Math.PI / 2;
     canalWater.position.set(0, 0.015, -1);
@@ -1197,7 +1191,6 @@
     gardenGroup.add(canalWater);
     gardenFloorMeshes.push(canalWater);
 
-    // 수로 양옆 자갈 산책로
     [-4.3, 4.3].forEach((px) => {
       const path = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 54), mats.gravelPath);
       path.rotation.x = -Math.PI / 2;
@@ -1208,7 +1201,6 @@
       gardenFloorMeshes.push(path);
     });
 
-    // 가로 산책로 & 목재 다리
     const crossPath = new THREE.Mesh(new THREE.PlaneGeometry(36, 3.2), mats.gravelPath);
     crossPath.rotation.x = -Math.PI / 2;
     crossPath.position.set(0, 0.012, -2);
@@ -1225,7 +1217,6 @@
     gardenGroup.add(footBridge);
     gardenFloorMeshes.push(footBridge);
 
-    // 북쪽 궁전 파사드 (슐라이스하임 궁전 진입 정면 모티브)
     const palaceBlock = new THREE.Mesh(new THREE.BoxGeometry(28, 7.5, 6), mats.palaceStone);
     palaceBlock.position.set(0, 3.75, -31);
     palaceBlock.castShadow = true;
@@ -1238,7 +1229,6 @@
     gardenGroup.add(palaceRoof);
     gardenObstacles.push({ x: 0, z: -31, r: 8.5 });
 
-    // 대칭형 파르테르 화단 & 보스케 나무 구획
     function addGardenTree(x, z, scale = 1) {
       const tg = new THREE.Group();
       tg.position.set(x, 0, z);
@@ -1257,7 +1247,6 @@
     }
 
     [-1, 1].forEach((side) => {
-      // 파르테르 꽃 화단 구획
       [-12, 8].forEach((pz) => {
         const bed = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.14, 11), mats.parterreLawn);
         bed.position.set(side * 10.5, 0.07, pz);
@@ -1269,14 +1258,12 @@
         gardenGroup.add(flowerBorder);
       });
 
-      // 가로수 열식
       for (let tz = -20; tz <= 18; tz += 6.3) {
         addGardenTree(side * 6.4, tz, 0.95);
         addGardenTree(side * 16.5, tz, 1.15);
       }
     });
 
-    // 중앙 분수
     const fountainBase = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.3, 0.65, 24), mats.marble);
     fountainBase.position.set(0, 0.325, 10.5);
     fountainBase.castShadow = true;
@@ -1285,9 +1272,7 @@
     gardenGroup.add(fountainBase, fountainSpire);
     gardenObstacles.push({ x: 0, z: 10.5, r: 2.3 });
 
-    // =========================================================
-    // 7. 편지 단서 데이터 (장미방 4개 + 정원 4개 = 총 8개)
-    // =========================================================
+    // 편지 단서 8개
     const CLUES = [
       {
         zone: 'chamber',
@@ -1404,9 +1389,6 @@
       clueMarkers.push({ group: mg, gem, ring, index: idx, zone: clue.zone });
     });
 
-    // =========================================================
-    // 8. Web Audio (배경 선율 + 바닥 재질별 발자국 소리)
-    // =========================================================
     const audioCtxHolder = { ctx: null, enabled: true, timerId: null, step: 0 };
 
     function ensureAudio() {
@@ -1468,28 +1450,24 @@
       const gain = ctx.createGain();
 
       if (surface === 'carpet') {
-        // 러그/카펫 위 부드러운 발소리
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(125, now);
         osc.frequency.exponentialRampToValueAtTime(55, now + 0.095);
         gain.gain.setValueAtTime(0.085, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.105);
       } else if (surface === 'gravel') {
-        // 정원 자갈길 사각거리는 발소리
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(340, now);
         osc.frequency.exponentialRampToValueAtTime(120, now + 0.065);
         gain.gain.setValueAtTime(0.055, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
       } else if (surface === 'grass') {
-        // 정원 잔디 위 포근한 발소리
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(150, now);
         osc.frequency.exponentialRampToValueAtTime(68, now + 0.085);
         gain.gain.setValueAtTime(0.07, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
       } else {
-        // 원목 마루 / 목재 다리 발소리
         osc.type = 'sine';
         osc.frequency.setValueAtTime(220, now);
         osc.frequency.exponentialRampToValueAtTime(84, now + 0.08);
@@ -1503,9 +1481,6 @@
       osc.stop(now + 0.12);
     }
 
-    // =========================================================
-    // 9. 구역 전환 (장미방 ↔ 슐라이스하임 궁전 정원) & UI
-    // =========================================================
     const clueCountEl = document.getElementById('clue-count');
     const zoneToggleBtn = document.getElementById('zone-toggle');
     const viewToggleBtn = document.getElementById('view-toggle');
@@ -1632,6 +1607,7 @@
 
     enterBtn.addEventListener('click', () => {
       introOverlay.classList.add('hidden');
+      introOverlay.style.display = 'none';
       ensureAudio();
       startMusicLoop();
     });
@@ -1669,9 +1645,6 @@
       return 'grass';
     }
 
-    // =========================================================
-    // 10. 포인터 조작 & 애니메이션 루프
-    // =========================================================
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
 
@@ -1771,7 +1744,6 @@
         }
       }
 
-      // 아바타 위치·방향·걸음 모션 (항상 visible 유지)
       avatarGroup.visible = true;
       avatarGroup.position.set(player.pos.x, 0, player.pos.z);
       avatarGroup.rotation.y = player.yaw;
@@ -1819,7 +1791,6 @@
         camera.position.copy(overviewState.pos);
         camera.lookAt(overviewState.lookAt);
       } else {
-        // 아바타 뒤쪽 살짝 위에서 바라보는 3인칭 산책 시점 (아바타가 화면에서 항상 보이도록)
         const backDist = 3.1;
         const forwardX = -Math.sin(player.yaw);
         const forwardZ = -Math.cos(player.yaw);
