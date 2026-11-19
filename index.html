@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>라스타의 황실 침실 · The Remarried Empress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #140e0a;
+      font-family: 'Noto Serif KR', serif;
+      color: #f8eedc;
+      user-select: none;
+    }
+    #canvas-container { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+    /* 상단 바 */
+    .top-bar {
+      position: fixed; top: 14px; left: 14px; right: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 20; pointer-events: none; gap: 8px;
+    }
+    .top-right-group {
+      display: flex; align-items: center; gap: 6px; pointer-events: auto;
+    }
+    .clue-pill, .pill-btn {
+      pointer-events: auto;
+      background: rgba(24, 16, 12, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(218, 178, 108, 0.52);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #f7e6c4;
+      letter-spacing: 0.02em;
+    }
+    .clue-pill span { color: #ffd479; font-weight: 700; }
+    .pill-btn {
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+    .pill-btn:hover { background: rgba(48, 32, 22, 0.9); border-color: #f0c975; }
+    .pill-btn:active { transform: scale(0.96); }
+    .pill-btn.muted { opacity: 0.65; }
+
+    /* 인트로 카드 */
+    .intro-overlay {
+      position: fixed; inset: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at center, rgba(22, 14, 10, 0.55) 0%, rgba(10, 6, 4, 0.86) 100%);
+      transition: opacity 0.55s ease, visibility 0.55s ease;
+    }
+    .intro-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .intro-card {
+      max-width: 420px; width: 100%;
+      background: linear-gradient(165deg, rgba(34, 22, 16, 0.94), rgba(18, 11, 8, 0.96));
+      border: 1px solid rgba(226, 186, 112, 0.65);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 0 24px rgba(226, 186, 112, 0.12);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .intro-sub {
+      font-family: 'Cinzel', serif;
+      font-size: 11px; letter-spacing: 0.18em;
+      color: #d9b26f; margin-bottom: 10px;
+    }
+    .intro-card h1 {
+      font-size: 24px; font-weight: 700; color: #fff3dc;
+      margin-bottom: 12px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+    .intro-card p {
+      font-size: 13.5px; line-height: 1.7; color: #e5d4b7;
+      margin-bottom: 22px; word-break: keep-all;
+    }
+    .enter-btn {
+      width: 100%; padding: 13px 18px;
+      border-radius: 999px;
+      border: 1px solid #f2ce85;
+      background: linear-gradient(135deg, #c99746, #966824);
+      color: #fff9ee; font-family: 'Noto Serif KR', serif;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(150, 104, 36, 0.45);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .enter-btn:hover { filter: brightness(1.08); }
+    .enter-btn:active { transform: scale(0.98); }
+
+    /* 하단 조작 가이드 */
+    .guide-toast {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 15; pointer-events: none;
+      background: rgba(20, 13, 9, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(218, 178, 108, 0.38);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 12px; color: #ebd9ba;
+      white-space: nowrap;
+    }
+
+    /* 오브젝트 상세 모달 */
+    .detail-backdrop {
+      position: fixed; inset: 0; z-index: 25;
+      background: rgba(10, 6, 4, 0.45);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .detail-backdrop.open { opacity: 1; visibility: visible; }
+
+    .detail-panel {
+      position: fixed; left: 50%; bottom: 18px;
+      transform: translate(-50%, 115%);
+      width: calc(100% - 28px); max-width: 440px;
+      z-index: 26;
+      background: linear-gradient(170deg, rgba(33, 21, 15, 0.96), rgba(18, 11, 8, 0.98));
+      border: 1px solid rgba(226, 186, 112, 0.65);
+      border-radius: 20px;
+      padding: 22px 20px 18px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.72);
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .detail-panel.open { transform: translate(-50%, 0); }
+    .detail-tag {
+      font-family: 'Cinzel', serif;
+      font-size: 10.5px; letter-spacing: 0.16em;
+      color: #d9b26f; margin-bottom: 6px;
+    }
+    .detail-panel h2 { font-size: 19px; color: #fff3dc; margin-bottom: 10px; }
+    .detail-panel blockquote {
+      font-size: 13.5px; font-style: italic; color: #ffdca0;
+      border-left: 2px solid #d9a752;
+      padding-left: 11px; margin-bottom: 11px; line-height: 1.55;
+    }
+    .detail-panel p {
+      font-size: 13px; line-height: 1.65; color: #e2d1b5;
+      margin-bottom: 16px; word-break: keep-all;
+    }
+    .close-detail-btn {
+      width: 100%; padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(218, 178, 108, 0.5);
+      background: rgba(218, 178, 108, 0.14);
+      color: #f8e9cc; font-family: 'Noto Serif KR', serif;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .close-detail-btn:hover { background: rgba(218, 178, 108, 0.25); }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- 상단 상태, 사운드 및 시점 전환 바 -->
+  <div class="top-bar">
+    <div class="clue-pill">✦ 황실 단서 <span id="clue-count">0</span> / 8</div>
+    <div class="top-right-group">
+      <button type="button" class="pill-btn" id="sound-toggle-btn">🔊 소리 ON</button>
+      <button type="button" class="pill-btn" id="view-toggle-btn">🏛️ 전체 조망 뷰</button>
+    </div>
+  </div>
+
+  <!-- 하단 조작 안내 -->
+  <div class="guide-toast" id="guide-toast">바닥·가구 탭으로 이동 · 드래그로 시선 회전</div>
+
+  <!-- 시작 인트로 오버레이 -->
+  <div class="intro-overlay" id="intro-overlay">
+    <div class="intro-card">
+      <div class="intro-sub">THE REMARRIED EMPRESS · GRAND CHAMBER</div>
+      <h1>라스타의 황실 침실</h1>
+      <p>
+        세 개의 크리스털 샹들리에와 다섯 개의 아치형 창문, 금장 몰딩과 벨벳 커튼이 감싸는 로코코 궁전 침실.<br />
+        반짝이는 황금 단서를 탭해 단서를 모으고, 우측 상단 버튼으로 전체 조망 뷰와 눈높이 시점을 오가 보세요.
+      </p>
+      <button type="button" class="enter-btn" id="enter-btn">침실 안으로 들어가기</button>
+    </div>
+  </div>
+
+  <!-- 단서 상세 패널 -->
+  <div class="detail-backdrop" id="detail-backdrop"></div>
+  <section class="detail-panel" id="detail-panel" aria-live="polite">
+    <div class="detail-tag">OBJECT DETAIL</div>
+    <h2 id="detail-title">제목</h2>
+    <blockquote id="detail-quote">대사</blockquote>
+    <p id="detail-desc">설명</p>
+    <button type="button" class="close-detail-btn" id="close-detail-btn">계속 둘러보기</button>
+  </section>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // 0. Web Audio 사운드 매니저 (오르골·하프 아르페지오 + 재질별 약한 발소리 + 차임벨)
+    const soundManager = (() => {
+      let ctx = null;
+      let masterGain = null;
+      let noiseBuffer = null;
+      let ambientStarted = false;
+      let enabled = true;
+
+      function ensureContext() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return null;
+          ctx = new AudioCtx();
+          masterGain = ctx.createGain();
+          masterGain.gain.value = enabled ? 0.55 : 0;
+          masterGain.connect(ctx.destination);
+
+          // 부드러운 발소리 질감용 화이트 노이즈 버퍼 생성
+          const bufferSize = ctx.sampleRate * 0.25;
+          noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.04));
+          }
+        }
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        return ctx;
+      }
+
+      // 가벼운 오르골·하프 아르페지오 배경음
+      function startAmbient() {
+        if (ambientStarted) return;
+        const c = ensureContext();
+        if (!c) return;
+        ambientStarted = true;
+
+        // 로코코 궁전의 맑고 여린 하프/오르골 아르페지오 패턴 (D Major / B minor 순환)
+        const arpPhrases = [
+          [587.33, 739.99, 880.0, 1174.66, 880.0, 739.99],  // D5 - F#5 - A5 - D6 - A5 - F#5
+          [493.88, 739.99, 987.77, 1174.66, 987.77, 739.99], // B4 - F#5 - B5 - D6 - B5 - F#5
+          [392.00, 587.33, 739.99, 987.77, 739.99, 587.33],  // G4 - D5 - F#5 - B5 - F#5 - D5
+          [440.00, 659.25, 880.0, 1108.73, 880.0, 659.25]   // A4 - E5 - A5 - C#6 - A5 - E5
+        ];
+
+        let phraseIdx = 0;
+        let noteIdx = 0;
+
+        setInterval(() => {
+          if (!enabled || !ctx || !masterGain || ctx.state !== 'running') return;
+
+          const phrase = arpPhrases[phraseIdx % arpPhrases.length];
+          const freq = phrase[noteIdx];
+          noteIdx++;
+          if (noteIdx >= phrase.length) {
+            noteIdx = 0;
+            phraseIdx++;
+            // 프레이즈 끝에는 한 박자 쉬어 여백을 줌
+            return;
+          }
+
+          const now = ctx.currentTime;
+
+          // 기본 맑은 오르골 톤
+          const osc1 = c.createOscillator();
+          const gain1 = c.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(freq, now);
+
+          gain1.gain.setValueAtTime(0.0001, now);
+          gain1.gain.linearRampToValueAtTime(0.036, now + 0.015);
+          gain1.gain.exponentialRampToValueAtTime(0.0001, now + 1.55);
+
+          osc1.connect(gain1);
+          gain1.connect(masterGain);
+          osc1.start(now);
+          osc1.stop(now + 1.6);
+
+          // 하프 현의 맑은 배음(옥타브 위 여린 반짝임)
+          const osc2 = c.createOscillator();
+          const gain2 = c.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq * 2, now);
+
+          gain2.gain.setValueAtTime(0.0001, now);
+          gain2.gain.linearRampToValueAtTime(0.009, now + 0.01);
+          gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+          osc2.connect(gain2);
+          gain2.connect(masterGain);
+          osc2.start(now);
+          osc2.stop(now + 0.6);
+        }, 620);
+      }
+
+      // 바닥 재질('carpet' | 'tile' | 'wood')에 따라 다른 약한 발소리 재생
+      function playStep(surface = 'wood') {
+        if (!enabled) return;
+        const c = ensureContext();
+        if (!c || !noiseBuffer) return;
+        const now = c.currentTime;
+
+        const noise = c.createBufferSource();
+        noise.buffer = noiseBuffer;
+
+        const filter = c.createBiquadFilter();
+        const noiseGain = c.createGain();
+
+        const osc = c.createOscillator();
+        const oscGain = c.createGain();
+
+        if (surface === 'carpet') {
+          // 1) 벨벳 카펫: 포근하고 낮게 스치는 부드러운 소리 (매우 약함)
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(420 + Math.random() * 60, now);
+          noiseGain.gain.setValueAtTime(0.045, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.09);
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(72, now);
+          osc.frequency.exponentialRampToValueAtTime(38, now + 0.07);
+          oscGain.gain.setValueAtTime(0.025, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.075);
+        } else if (surface === 'tile') {
+          // 2) 대리석 타일: 맑고 가볍게 또각거리는 높은 톤 (약하고 선명함)
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(2100 + Math.random() * 250, now);
+          filter.Q.value = 2.4;
+          noiseGain.gain.setValueAtTime(0.032, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.055);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(360 + Math.random() * 35, now);
+          osc.frequency.exponentialRampToValueAtTime(145, now + 0.045);
+          oscGain.gain.setValueAtTime(0.032, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.05);
+        } else {
+          // 3) 원목 파케트 마루: 차분하고 따뜻한 나무 울림
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(950 + Math.random() * 140, now);
+          filter.Q.value = 1.3;
+          noiseGain.gain.setValueAtTime(0.038, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.07);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(145 + Math.random() * 20, now);
+          osc.frequency.exponentialRampToValueAtTime(62, now + 0.065);
+          oscGain.gain.setValueAtTime(0.038, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.07);
+        }
+
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+
+        noise.start(now);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      }
+
+      function playClueChime() {
+        if (!enabled) return;
+        const c = ensureContext();
+        if (!c) return;
+        const now = c.currentTime;
+        const notes = [587.33, 739.99, 880.0, 1174.66];
+
+        notes.forEach((freq, i) => {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sine';
+          const t0 = now + i * 0.07;
+          osc.frequency.setValueAtTime(freq, t0);
+
+          gain.gain.setValueAtTime(0.001, t0);
+          gain.gain.linearRampToValueAtTime(0.11, t0 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.55);
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(t0);
+          osc.stop(t0 + 0.58);
+        });
+      }
+
+      function setEnabled(val) {
+        enabled = val;
+        if (val) {
+          ensureContext();
+          startAmbient();
+          if (masterGain && ctx) {
+            masterGain.gain.setTargetAtTime(0.55, ctx.currentTime, 0.05);
+          }
+        } else if (masterGain && ctx) {
+          masterGain.gain.setTargetAtTime(0.0, ctx.currentTime, 0.05);
+        }
+      }
+
+      return {
+        startAmbient,
+        playStep,
+        playClueChime,
+        setEnabled,
+        isEnabled: () => enabled
+      };
+    })();
+
+    const soundToggleBtn = document.getElementById('sound-toggle-btn');
+    soundToggleBtn.addEventListener('click', () => {
+      const next = !soundManager.isEnabled();
+      soundManager.setEnabled(next);
+      soundToggleBtn.textContent = next ? '🔊 소리 ON' : '🔇 소리 OFF';
+      soundToggleBtn.classList.toggle('muted', !next);
+    });
+
+    // 1. 기본 씬 & 렌더러 설정
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x18110c);
+    scene.fog = new THREE.FogExp2(0x1c130d, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 80);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    container.appendChild(renderer.domElement);
+
+    // 2. 조명 설정
+    const hemiLight = new THREE.HemisphereLight(0xfff1d6, 0x3b2418, 0.98);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffe6bd, 1.15);
+    dirLight.position.set(10, 14, 6);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(1024, 1024);
+    scene.add(dirLight);
+
+    // 3. 방 크기 및 바닥 재질 구역 정의 (18m x 22m 대형 침실)
+    const ROOM_W = 18;
+    const ROOM_D = 22;
+    const ROOM_H = 6.8;
+
+    function createParquetTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#5a3822';
+      ctx.fillRect(0, 0, 512, 512);
+      const step = 64;
+      for (let y = 0; y < 512; y += step) {
+        for (let x = 0; x < 512; x += step) {
+          ctx.fillStyle = ((x + y) / step) % 2 === 0 ? '#694228' : '#4f301c';
+          ctx.fillRect(x + 2, y + 2, step - 4, step - 4);
+          ctx.strokeStyle = 'rgba(255, 215, 150, 0.08)';
+          ctx.strokeRect(x + 4, y + 4, step - 8, step - 8);
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(9, 11);
+      return tex;
+    }
+
+    function createMarbleTileTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ece3d5';
+      ctx.fillRect(0, 0, 512, 512);
+      const step = 128;
+      for (let y = 0; y < 512; y += step) {
+        for (let x = 0; x < 512; x += step) {
+          ctx.fillStyle = ((x + y) / step) % 2 === 0 ? '#f4ede1' : '#e2d6c3';
+          ctx.fillRect(x + 2, y + 2, step - 4, step - 4);
+          ctx.strokeStyle = 'rgba(185, 155, 110, 0.35)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x + 1, y + 1, step - 2, step - 2);
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 11);
+      return tex;
+    }
+
+    function createRugTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#6e1926';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.strokeStyle = '#e5bd6b';
+      ctx.lineWidth = 18;
+      ctx.strokeRect(24, 24, 464, 464);
+      ctx.lineWidth = 5;
+      ctx.strokeRect(46, 46, 420, 420);
+      ctx.beginPath();
+      ctx.arc(256, 256, 110, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(242, 206, 133, 0.55)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      return new THREE.CanvasTexture(c);
+    }
+
+    // 1) 기본 원목 마루 바닥
+    const floorMat = new THREE.MeshStandardMaterial({ map: createParquetTexture(), roughness: 0.48, metalness: 0.08 });
+    const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    floorMesh.name = 'floor';
+    scene.add(floorMesh);
+
+    // 2) 우측 아치 창가 대리석 타일 산책로 (x: 5.0 ~ 9.0)
+    const tileMat = new THREE.MeshStandardMaterial({ map: createMarbleTileTexture(), roughness: 0.25, metalness: 0.12 });
+    const tileMesh = new THREE.Mesh(new THREE.PlaneGeometry(4.0, ROOM_D), tileMat);
+    tileMesh.rotation.x = -Math.PI / 2;
+    tileMesh.position.set(7.0, 0.008, 0);
+    tileMesh.receiveShadow = true;
+    tileMesh.name = 'floor';
+    scene.add(tileMesh);
+
+    // 3) 중앙 황실 벨벳 카펫 (x: -4.8 ~ 4.8, z: -6.75 ~ 6.75)
+    const rugMat = new THREE.MeshStandardMaterial({ map: createRugTexture(), roughness: 0.85 });
+    const rugMesh = new THREE.Mesh(new THREE.PlaneGeometry(9.6, 13.5), rugMat);
+    rugMesh.rotation.x = -Math.PI / 2;
+    rugMesh.position.y = 0.015;
+    rugMesh.receiveShadow = true;
+    rugMesh.name = 'floor';
+    scene.add(rugMesh);
+
+    // 현재 좌표의 바닥 재질 판별 함수
+    function getFloorSurfaceAt(x, z) {
+      if (Math.abs(x) <= 4.8 && Math.abs(z) <= 6.75) return 'carpet';
+      if (x >= 5.0) return 'tile';
+      return 'wood';
+    }
+
+    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf4ead8, roughness: 0.75 });
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), ceilingMat);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = ROOM_H;
+    scene.add(ceiling);
+
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xd9ab52, roughness: 0.3, metalness: 0.78 });
+    const creamWallMat = new THREE.MeshStandardMaterial({ color: 0xefe2cc, roughness: 0.65 });
+    const velvetMat = new THREE.MeshStandardMaterial({ color: 0x7a1c2b, roughness: 0.8 });
+
+    const wallSpecs = [
+      { w: ROOM_W, h: ROOM_H, x: 0, z: -ROOM_D / 2, ry: 0 },
+      { w: ROOM_W, h: ROOM_H, x: 0, z: ROOM_D / 2, ry: Math.PI },
+      { w: ROOM_D, h: ROOM_H, x: -ROOM_W / 2, z: 0, ry: Math.PI / 2 },
+      { w: ROOM_D, h: ROOM_H, x: ROOM_W / 2, z: 0, ry: -Math.PI / 2 }
+    ];
+    wallSpecs.forEach(s => {
+      const wall = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.h), creamWallMat);
+      wall.position.set(s.x, s.h / 2, s.z);
+      wall.rotation.y = s.ry;
+      wall.receiveShadow = true;
+      scene.add(wall);
+
+      const dado = new THREE.Mesh(new THREE.BoxGeometry(s.w - 0.1, 1.35, 0.12), creamWallMat);
+      dado.position.set(s.x, 0.68, s.z);
+      dado.rotation.y = s.ry;
+      scene.add(dado);
+
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(s.w - 0.08, 0.1, 0.16), goldMat);
+      trim.position.set(s.x, 1.36, s.z);
+      trim.rotation.y = s.ry;
+      scene.add(trim);
+    });
+
+    // 크리스털 샹들리에 3개
+    const crystalMat = new THREE.MeshStandardMaterial({
+      color: 0xfff7e2, emissive: 0xffcf75, emissiveIntensity: 0.78, roughness: 0.15, metalness: 0.3
+    });
+    [-6.2, 0, 6.2].forEach(zPos => {
+      const group = new THREE.Group();
+      group.position.set(0, ROOM_H - 0.2, zPos);
+      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 8), goldMat);
+      chain.position.y = -0.55;
+      group.add(chain);
+
+      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.06, 10, 28), goldMat);
+      ring1.rotation.x = Math.PI / 2;
+      ring1.position.y = -1.25;
+      group.add(ring1);
+
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 1), crystalMat);
+      core.position.y = -1.35;
+      group.add(core);
+
+      for (let i = 0; i < 8; i++) {
+        const ang = (i / 8) * Math.PI * 2;
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), crystalMat);
+        bulb.position.set(Math.cos(ang) * 0.95, -1.12, Math.sin(ang) * 0.95);
+        group.add(bulb);
+      }
+
+      const ptLight = new THREE.PointLight(0xffdca3, 18, 16, 1.6);
+      ptLight.position.set(0, -1.5, 0);
+      group.add(ptLight);
+      scene.add(group);
+    });
+
+    // 우측 벽 아치형 창문 5개 + 벨벳 커튼
+    [-8, -4, 0, 4, 8].forEach(zPos => {
+      const winGroup = new THREE.Group();
+      winGroup.position.set(ROOM_W / 2 - 0.06, 3.1, zPos);
+      winGroup.rotation.y = -Math.PI / 2;
+
+      const glass = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.1, 3.8),
+        new THREE.MeshBasicMaterial({ color: 0xffe9c2 })
+      );
+      winGroup.add(glass);
+
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(2.3, 4.0, 0.14), goldMat);
+      frame.position.z = -0.04;
+      winGroup.add(frame);
+
+      [-1.18, 1.18].forEach(cx => {
+        const curtain = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 4.3, 12), velvetMat);
+        curtain.position.set(cx, -0.05, 0.16);
+        winGroup.add(curtain);
+      });
+      scene.add(winGroup);
+    });
+
+    // 4. 인터랙티브 단서 오브젝트 8개 + 반짝임 마커
+    const cluesData = [
+      {
+        id: 'bed', title: '천개 달린 황실 침대',
+        quote: '“이 부드러운 실크 이불이 정말 제 것이 맞나요?”',
+        desc: '금장 기둥과 붉은 벨벳 휘장이 드리워진 대형 캐노피 침대입니다. 순백의 거위털 베개가 겹겹이 쌓여 있습니다.',
+        pos: [0, 1.1, -8.2], size: [4.2, 2.2, 3.4], color: 0x9c2638
+      },
+      {
+        id: 'vanity', title: '진주 세공 화장대',
+        quote: '“거울 속 모습만큼은 황후님께도 뒤지지 않아요.”',
+        desc: '상아와 순금으로 장식된 삼면경 화장대 위에는 최고급 장미 향수병과 진주 머리핀이 놓여 있습니다.',
+        pos: [-6.8, 1.0, -5.2], size: [1.8, 2.0, 2.6], color: 0xdfb973
+      },
+      {
+        id: 'tea', title: '창가 티 테이블과 마카롱',
+        quote: '“달콤한 다과는 언제 먹어도 기분이 좋아지는걸요.”',
+        desc: '아치형 창문 햇살 아래 놓인 대리석 원형 테이블입니다. 은제 3단 트레이에 분홍빛 마카롱이 가득합니다.',
+        pos: [6.3, 0.85, -2.0], size: [1.8, 1.7, 1.8], color: 0xf2e3d0
+      },
+      {
+        id: 'wardrobe', title: '드레스와 보석 장식장',
+        quote: '“사교계 데뷔 날 입을 가장 화려한 드레스를 골라야 해요.”',
+        desc: '레이스와 금실로 수놓인 야회복과 붉은 루비 목걸이가 진열된 대형 유리 장식장입니다.',
+        pos: [-7.2, 1.5, 1.5], size: [1.6, 3.0, 3.0], color: 0x7c4a2d
+      },
+      {
+        id: 'letters', title: '리본으로 묶인 서신함',
+        quote: '“폐하께서 보내주신 다정한 편지들이에요.”',
+        desc: '금박 인장이 찍힌 양피지 편지들과 실크 리본이 담긴 벨벳 보석함입니다.',
+        pos: [5.8, 0.9, 3.8], size: [1.6, 1.6, 1.6], color: 0xb8863b
+      },
+      {
+        id: 'harp', title: '황금 장식 하프',
+        quote: '“연주 실력은 아직 서툴지만, 그림처럼 아름답지 않나요?”',
+        desc: '백조 날개 모양으로 조각된 금장 하프가 창가 옆 연주석에 세워져 있습니다.',
+        pos: [6.4, 1.3, 7.6], size: [1.5, 2.6, 1.5], color: 0xe3b857
+      },
+      {
+        id: 'sofa', title: '벨벳 로코코 응접 소파',
+        quote: '“귀부인들을 초대해 다과회를 열면 모두가 부러워할 거예요.”',
+        desc: '곡선형 금장 프레임에 짙은 장밋빛 벨벳 쿠션이 얹힌 응접용 긴 의자입니다.',
+        pos: [-5.6, 0.85, 7.2], size: [2.8, 1.7, 1.6], color: 0x8a2232
+      },
+      {
+        id: 'portrait', title: '전신 황금 액자 거울',
+        quote: '“동대제국에서 가장 사랑받는 여인의 모습이에요.”',
+        desc: '천장까지 닿을 듯한 대형 금장 전신 거울입니다. 주변에 은은한 황금빛 마커가 반짝입니다.',
+        pos: [0, 1.6, 9.6], size: [2.4, 3.2, 0.6], color: 0xf0ca78
+      }
+    ];
+
+    const interactables = [];
+    const sparkleItems = [];
+    const foundClues = new Set();
+    const clueCountEl = document.getElementById('clue-count');
+
+    cluesData.forEach((item, idx) => {
+      const group = new THREE.Group();
+      group.position.set(item.pos[0], 0, item.pos[2]);
+
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(item.size[0], item.size[1], item.size[2]),
+        new THREE.MeshStandardMaterial({ color: item.color, roughness: 0.4, metalness: 0.28 })
+      );
+      mesh.position.y = item.pos[1];
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = { clue: item };
+      group.add(mesh);
+
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xffd77a, side: THREE.DoubleSide, transparent: true, opacity: 0.82
+      });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.22, 32), ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.03;
+      group.add(ring);
+
+      const sparkleMat = new THREE.MeshStandardMaterial({
+        color: 0xfff3c4,
+        emissive: 0xffc857,
+        emissiveIntensity: 1.4,
+        roughness: 0.15,
+        metalness: 0.6
+      });
+      const sparkle = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 0), sparkleMat);
+      const baseSparkleY = item.size[1] + 0.65;
+      sparkle.position.y = baseSparkleY;
+      sparkle.userData = { clue: item };
+      group.add(sparkle);
+
+      scene.add(group);
+      interactables.push(mesh, sparkle);
+      sparkleItems.push({
+        id: item.id,
+        sparkle,
+        sparkleMat,
+        ring,
+        ringMat,
+        baseSparkleY,
+        phase: idx * 0.85
+      });
+    });
+
+    // 이동 목적지 표시 링 + 캐릭터 마커
+    const targetRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.32, 0.48, 28),
+      new THREE.MeshBasicMaterial({ color: 0xffe08a, side: THREE.DoubleSide, transparent: true, opacity: 0 })
+    );
+    targetRing.rotation.x = -Math.PI / 2;
+    targetRing.position.y = 0.04;
+    scene.add(targetRing);
+
+    const avatarMarker = new THREE.Group();
+    const dressCone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.45, 1.35, 18),
+      new THREE.MeshStandardMaterial({ color: 0xf7d7df, roughness: 0.5 })
+    );
+    dressCone.position.y = 0.68;
+    const headSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xffe4d2, roughness: 0.5 })
+    );
+    headSphere.position.y = 1.48;
+    avatarMarker.add(dressCone, headSphere);
+    scene.add(avatarMarker);
+
+    // 5. 플레이어 상태 & 시점 전환
+    const player = {
+      pos: new THREE.Vector3(0, 0, 4.5),
+      targetPos: new THREE.Vector3(0, 0, 4.5),
+      yaw: 0,
+      pitch: -0.04,
+      eyeHeight: 1.65,
+      isOverview: false,
+      stepAccum: 0
+    };
+
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    const guideToast = document.getElementById('guide-toast');
+
+    function updateViewModeUI() {
+      if (player.isOverview) {
+        viewToggleBtn.textContent = '👁️ 눈높이 시점';
+        guideToast.textContent = '전체 조망 뷰 · 반짝이는 가구나 바닥을 탭해 이동하세요';
+        avatarMarker.visible = true;
+      } else {
+        viewToggleBtn.textContent = '🏛️ 전체 조망 뷰';
+        guideToast.textContent = '바닥·가구 탭으로 이동 · 드래그로 시선 회전';
+        avatarMarker.visible = false;
+      }
+    }
+    updateViewModeUI();
+
+    viewToggleBtn.addEventListener('click', () => {
+      soundManager.startAmbient();
+      player.isOverview = !player.isOverview;
+      updateViewModeUI();
+    });
+
+    // 6. 포인터 조작
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let isPointerDown = false;
+    let hasDragged = false;
+    let startX = 0, startY = 0;
+    let prevX = 0, prevY = 0;
+
+    function getPointerNDC(clientX, clientY) {
+      pointer.x = (clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      soundManager.startAmbient();
+      isPointerDown = true;
+      hasDragged = false;
+      startX = prevX = e.clientX;
+      startY = prevY = e.clientY;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isPointerDown) return;
+      const dx = e.clientX - prevX;
+      const dy = e.clientY - prevY;
+      prevX = e.clientX;
+      prevY = e.clientY;
+
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 7) {
+        hasDragged = true;
+      }
+
+      if (hasDragged) {
+        const rotSpeed = 0.0048;
+        player.yaw -= dx * rotSpeed;
+        if (!player.isOverview) {
+          player.pitch = THREE.MathUtils.clamp(player.pitch - dy * 0.0035, -0.55, 0.65);
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (!isPointerDown) return;
+      isPointerDown = false;
+
+      if (!hasDragged) {
+        getPointerNDC(e.clientX, e.clientY);
+        raycaster.setFromCamera(pointer, camera);
+
+        const clueHits = raycaster.intersectObjects(interactables, false);
+        if (clueHits.length > 0) {
+          const clue = clueHits[0].object.userData.clue;
+          openClueDetail(clue);
+          const approach = new THREE.Vector3(clue.pos[0], 0, clue.pos[2]).lerp(player.pos, 0.35);
+          clampToRoom(approach);
+          player.targetPos.copy(approach);
+          showTargetRing(approach);
+          return;
+        }
+
+        const floorHits = raycaster.intersectObjects([floorMesh, tileMesh, rugMesh], false);
+        if (floorHits.length > 0) {
+          const pt = floorHits[0].point.clone();
+          pt.y = 0;
+          clampToRoom(pt);
+          player.targetPos.copy(pt);
+          showTargetRing(pt);
+        }
+      }
+    });
+
+    function clampToRoom(vec) {
+      vec.x = THREE.MathUtils.clamp(vec.x, -ROOM_W / 2 + 1.3, ROOM_W / 2 - 1.3);
+      vec.z = THREE.MathUtils.clamp(vec.z, -ROOM_D / 2 + 1.3, ROOM_D / 2 - 1.3);
+    }
+
+    function showTargetRing(pos) {
+      targetRing.position.set(pos.x, 0.04, pos.z);
+      targetRing.material.opacity = 0.95;
+      targetRing.scale.set(0.6, 0.6, 0.6);
+    }
+
+    // 7. 단서 상세 패널 & 인트로 제어
+    const detailPanel = document.getElementById('detail-panel');
+    const detailBackdrop = document.getElementById('detail-backdrop');
+    const detailTitle = document.getElementById('detail-title');
+    const detailQuote = document.getElementById('detail-quote');
+    const detailDesc = document.getElementById('detail-desc');
+
+    function openClueDetail(clue) {
+      const isNew = !foundClues.has(clue.id);
+      foundClues.add(clue.id);
+      clueCountEl.textContent = foundClues.size;
+      if (isNew) {
+        soundManager.playClueChime();
+      }
+      detailTitle.textContent = clue.title;
+      detailQuote.textContent = clue.quote;
+      detailDesc.textContent = clue.desc;
+      detailPanel.classList.add('open');
+      detailBackdrop.classList.add('open');
+    }
+
+    function closeClueDetail() {
+      detailPanel.classList.remove('open');
+      detailBackdrop.classList.remove('open');
+    }
+
+    document.getElementById('close-detail-btn').addEventListener('click', closeClueDetail);
+    detailBackdrop.addEventListener('click', closeClueDetail);
+
+    document.getElementById('enter-btn').addEventListener('click', () => {
+      soundManager.startAmbient();
+      document.getElementById('intro-overlay').classList.add('hidden');
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // 8. 애니메이션 루프
+    const clock = new THREE.Clock();
+    const desiredCamPos = new THREE.Vector3();
+    const lookTarget = new THREE.Vector3();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.getElapsedTime();
+
+      sparkleItems.forEach(item => {
+        const isFound = foundClues.has(item.id);
+        const pulse = 0.5 + 0.5 * Math.sin(elapsed * 3.4 + item.phase);
+
+        item.sparkle.rotation.y = elapsed * 1.8 + item.phase;
+        item.sparkle.position.y = item.baseSparkleY + Math.sin(elapsed * 2.6 + item.phase) * 0.14;
+        const sc = (isFound ? 0.72 : 1.0) + pulse * (isFound ? 0.12 : 0.28);
+        item.sparkle.scale.setScalar(sc);
+        item.sparkleMat.emissiveIntensity = isFound ? 0.55 : 1.15 + pulse * 0.9;
+
+        const ringScale = 0.96 + pulse * 0.12;
+        item.ring.scale.set(ringScale, ringScale, 1);
+        item.ringMat.opacity = isFound ? 0.35 : 0.55 + pulse * 0.35;
+      });
+
+      // 플레이어 부드러운 이동 + 현재 바닥 재질별 발소리 재생
+      const dist = player.pos.distanceTo(player.targetPos);
+      if (dist > 0.04) {
+        const step = Math.min(dist, 4.6 * dt);
+        const dir = player.targetPos.clone().sub(player.pos).normalize();
+        player.pos.addScaledVector(dir, step);
+        avatarMarker.rotation.y = Math.atan2(dir.x, dir.z);
+
+        player.stepAccum += step;
+        if (player.stepAccum >= 1.05) {
+          player.stepAccum = 0;
+          const surface = getFloorSurfaceAt(player.pos.x, player.pos.z);
+          soundManager.playStep(surface);
+        }
+      } else {
+        player.stepAccum = 0.85;
+      }
+      avatarMarker.position.copy(player.pos);
+
+      if (targetRing.material.opacity > 0.01) {
+        targetRing.material.opacity *= 0.94;
+        targetRing.scale.addScalar(dt * 1.4);
+      }
+
+      if (player.isOverview) {
+        const distBack = 9.5;
+        const heightUp = 10.5;
+        desiredCamPos.set(
+          player.pos.x + Math.sin(player.yaw) * distBack,
+          heightUp,
+          player.pos.z + Math.cos(player.yaw) * distBack
+        );
+        lookTarget.set(player.pos.x, 1.0, player.pos.z);
+      } else {
+        desiredCamPos.set(player.pos.x, player.eyeHeight, player.pos.z);
+        lookTarget.set(
+          player.pos.x - Math.sin(player.yaw) * 5,
+          player.eyeHeight + Math.sin(player.pitch) * 5,
+          player.pos.z - Math.cos(player.yaw) * 5
+        );
+      }
+
+      camera.position.lerp(desiredCamPos, 0.14);
+      camera.lookAt(lookTarget);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
